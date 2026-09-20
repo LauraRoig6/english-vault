@@ -50,39 +50,73 @@ function Chip({ kind, children, onClick }) {
   );
 }
 
-// Highlight matching text
+// Small edit-distance helper so searches tolerate minor typos (e.g. "bananna" -> "banana").
+function editDistance(a = '', b = '') {
+  const x = String(a).toLowerCase();
+  const y = String(b).toLowerCase();
+  const prev = Array.from({ length: y.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= x.length; i++) {
+    let left = i;
+    let diag = i - 1;
+    for (let j = 1; j <= y.length; j++) {
+      const up = prev[j];
+      const val = x[i - 1] === y[j - 1] ? diag : 1 + Math.min(diag, left, up);
+      prev[j] = val;
+      diag = up;
+      left = val;
+    }
+  }
+  return prev[y.length];
+}
+
+function fuzzyTokenMatch(token, candidate) {
+  if (!token || !candidate) return false;
+  const t = token.toLowerCase();
+  const c = candidate.toLowerCase();
+  if (c.includes(t) || t.includes(c)) return true;
+  const maxDist = t.length <= 4 ? 1 : t.length <= 8 ? 2 : 3;
+  return editDistance(t, c) <= maxDist;
+}
+
+function textHasFuzzyToken(text, token) {
+  const value = String(text || '').toLowerCase();
+  if (value.includes(token.toLowerCase())) return true;
+  const words = value.match(/[a-zà-ÿ'-]+/gi) || [];
+  return words.some((w) => fuzzyTokenMatch(token, w));
+}
+
+// Highlight exact hits and close fuzzy word hits.
 function Highlight({ text, query }) {
   if (!query || !text) return <>{text}</>;
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return <>{text}</>;
-  const pattern = new RegExp(`(${tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
-  const parts = String(text).split(pattern);
+  if (!tokens.length) return <>{text}</>;
+  const parts = String(text).split(/(\b[\w'-]+\b)/g);
   return (
     <>
-      {parts.map((p, i) =>
-        pattern.test(p) ? (
+      {parts.map((p, i) => {
+        const low = p.toLowerCase();
+        const hit = tokens.some((t) => low.includes(t) || fuzzyTokenMatch(t, low));
+        return hit && /[\w]/.test(p) ? (
           <mark key={i} style={{ background: '#fff3c9', color: '#85671f', padding: '0 2px', borderRadius: '3px' }}>{p}</mark>
-        ) : (
-          <React.Fragment key={i}>{p}</React.Fragment>
-        )
-      )}
+        ) : <React.Fragment key={i}>{p}</React.Fragment>;
+      })}
     </>
   );
 }
 
-// Fuzzy scoring: tokens all present anywhere (order-independent, substring OK)
+// Fuzzy search across the whole record; all query tokens must match somewhere.
 function fuzzyMatch(record, query) {
   if (!query) return true;
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (!tokens.length) return true;
-  const haystack = [
+  const fields = [
     record.word, record.meaning, record.spanish, record.topic, record.tags,
     record.notes, record.type, record.synonyms, record.related, record.my_example,
     record.example, record.rule, record.explanation, record.level, record.register,
     record.variety, record.status, record.how_common, record.slang_tags,
     record.similar_expressions,
-  ].join(' ').toLowerCase();
-  return tokens.every((t) => haystack.includes(t));
+  ];
+  return tokens.every((t) => fields.some((field) => textHasFuzzyToken(field, t)));
 }
 
 function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick }) {

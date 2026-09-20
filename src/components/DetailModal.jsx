@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { X, Heart, Volume2, Share2, Download } from 'lucide-react';
+import { X, Heart, Volume2, Share2, Sparkles, Languages } from 'lucide-react';
 
 
 function speak(text, lang) {
@@ -42,6 +42,10 @@ function Chip({ kind, children }) {
 
 export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onUpdate, onTagClick }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [contextExamples, setContextExamples] = useState(null);
+  const [spanishHelp, setSpanishHelp] = useState(null);
+  const [helpLoading, setHelpLoading] = useState('');
+  const [helpError, setHelpError] = useState('');
   const shareRef = useRef(null);
 
   if (!record) return null;
@@ -82,6 +86,27 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
     ['Slang tags', record.slang_tags],
   ];
 
+
+
+  const askAiHelp = async (mode) => {
+    setHelpLoading(mode);
+    setHelpError('');
+    try {
+      const response = await fetch('/api/word-help', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, word: record.word, meaning: record.meaning || record.explanation || '', type: record.type || '' }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || 'Could not generate this help.');
+      if (mode === 'contexts') setContextExamples(data.examples || []);
+      else setSpanishHelp(data);
+    } catch (err) {
+      setHelpError(err?.message || 'Could not generate this help.');
+    } finally {
+      setHelpLoading('');
+    }
+  };
 
   const handleShare = async () => {
     if (!shareRef.current) return;
@@ -145,6 +170,41 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           })}
         </div>
 
+
+        {!isTrick && (
+          <section className="mt-6 rounded-2xl p-4" style={{ background: '#fffafc', border: '1px solid #efd3df' }}>
+            <p className="eyebrow" style={{ marginBottom: '8px' }}>AI study help</p>
+            <div className="flex flex-wrap gap-2">
+              <button className="soft-btn" type="button" onClick={() => askAiHelp('contexts')} disabled={!!helpLoading}>
+                <Sparkles size={15} style={{ display: 'inline', marginRight: 5 }} />
+                {helpLoading === 'contexts' ? 'Generating…' : '3 context examples'}
+              </button>
+              <button className="soft-btn" type="button" onClick={() => askAiHelp('spanish')} disabled={!!helpLoading}>
+                <Languages size={15} style={{ display: 'inline', marginRight: 5 }} />
+                {helpLoading === 'spanish' ? 'Explicando…' : 'Explícamelo en español'}
+              </button>
+            </div>
+            {helpError && <p className="text-sm mt-3" style={{ color: '#9d4f6e' }}>{helpError}</p>}
+            {contextExamples && contextExamples.length > 0 && (
+              <div className="grid md:grid-cols-3 gap-3 mt-4">
+                {contextExamples.map((ex, i) => (
+                  <div key={i} className="rounded-xl p-3" style={{ background: '#fff', border: '1px solid #eadde3' }}>
+                    <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{ex.context}</p>
+                    <p className="mt-2 mb-1" style={{ lineHeight: 1.5 }}>{ex.sentence}</p>
+                    <p className="text-xs m-0" style={{ color: '#7b6d75', lineHeight: 1.45 }}>{ex.why_it_fits}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {spanishHelp && (
+              <div className="mt-4 rounded-xl p-4" style={{ background: '#fff', border: '1px solid #eadde3' }}>
+                <p className="m-0" style={{ lineHeight: 1.6 }}>{spanishHelp.explanation}</p>
+                {spanishHelp.nuance && <p className="mt-3 mb-0 text-sm" style={{ lineHeight: 1.5 }}><strong>Matiz:</strong> {spanishHelp.nuance}</p>}
+                {spanishHelp.memory_tip && <p className="mt-2 mb-0 text-sm" style={{ lineHeight: 1.5 }}><strong>Truco:</strong> {spanishHelp.memory_tip}</p>}
+              </div>
+            )}
+          </section>
+        )}
 
         <div className="grid md:grid-cols-2 gap-5 mt-7">
           {fields.filter(([, v]) => v).map(([label, value]) => (
