@@ -7,10 +7,10 @@ import PracticeView from './PracticeView';
 import EntryModal from './EntryModal';
 import DetailModal from './DetailModal';
 import SurpriseDiscoveryModal from './SurpriseDiscoveryModal';
-import { Search, Dice5, Plus, House, LibraryBig, GraduationCap, Heart } from 'lucide-react';
+import { Search, Dice5, Plus, House, LibraryBig, GraduationCap, Heart, LogOut, RefreshCw } from 'lucide-react';
 
-export default function EnglishVault() {
-  const { records, create, update, remove, replaceAll } = useVault();
+export default function EnglishVault({ session, onSignOut }) {
+  const { records, create, update, remove, replaceAll, loaded, syncError, reload } = useVault(session);
   const [currentView, setCurrentView] = useState('home');
   const [librarySpecificType, setLibrarySpecificType] = useState('');
   const [libraryTagFilter, setLibraryTagFilter] = useState('');
@@ -273,6 +273,12 @@ export default function EnglishVault() {
             />
           </div>
           <div className="flex gap-2">
+            <button className="soft-btn inline-flex gap-2 items-center" type="button" onClick={reload} title="Sync now">
+              <RefreshCw size={18} />
+            </button>
+            <button className="soft-btn inline-flex gap-2 items-center" type="button" onClick={onSignOut} title="Sign out">
+              <LogOut size={18} />
+            </button>
             <button className="soft-btn inline-flex gap-2 items-center" type="button" onClick={handleSurprise}>
               <Dice5 size={18} />Surprise me
             </button>
@@ -281,6 +287,17 @@ export default function EnglishVault() {
             </button>
           </div>
         </header>
+
+        {!loaded && (
+          <div style={{ margin: '12px 0', padding: '10px 14px', borderRadius: 14, background: '#fff6fa', color: '#7c5367', fontWeight: 700 }}>
+            Syncing your vault…
+          </div>
+        )}
+        {syncError && (
+          <div style={{ margin: '12px 0', padding: '10px 14px', borderRadius: 14, background: '#fff0f2', color: '#9c2944' }}>
+            Sync issue: {syncError} <button type="button" onClick={reload} style={{ border: 0, background: 'transparent', textDecoration: 'underline', cursor: 'pointer', fontWeight: 700 }}>Try again</button>
+          </div>
+        )}
 
         {currentView === 'home' && (
           <HomeView

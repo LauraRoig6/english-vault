@@ -1,0 +1,23 @@
+ENGLISH VAULT — SINCRONIZACIÓN MÓVIL + PC
+
+Variables ya creadas en Vercel (Production):
+- REACT_APP_SUPABASE_URL
+- REACT_APP_SUPABASE_ANON_KEY
+- OPENAI_API_KEY (Secret)
+
+Supabase:
+- tabla: public.entries
+- RLS activado
+- políticas SELECT / INSERT / UPDATE / DELETE para auth.uid() = user_id
+
+Después de subir este ZIP a GitHub y esperar a que Vercel muestre Ready:
+1. Abre English Vault en el PC donde ya tienes tus palabras.
+2. Crea tu cuenta en la pantalla de English Vault con email y contraseña.
+3. Si Supabase pide confirmar el email, confírmalo y vuelve a iniciar sesión.
+4. En el primer inicio, si la nube está vacía, la app sube automáticamente el vault que ya existe en ese navegador.
+5. Luego abre la misma URL en el móvil, inicia sesión con EL MISMO email y contraseña y verás las mismas entradas.
+6. El botón circular de flechas fuerza una recarga de la nube. El botón de salida cierra sesión.
+
+IMPORTANTE:
+- La cuenta de GitHub con la que entraste al panel de Supabase NO es automáticamente la cuenta de English Vault.
+- Para sincronizar, crea una cuenta dentro de English Vault y usa la misma en todos tus dispositivos.
