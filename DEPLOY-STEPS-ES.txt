@@ -1,27 +1,20 @@
-ENGLISH VAULT — PUBLICAR GRATIS EN VERCEL
+ENGLISH VAULT — ACTUALIZAR EN VERCEL
 
-Esta versión funciona sin backend y guarda las entradas en el navegador (localStorage).
-No necesitas MongoDB ni variables de entorno.
+1. Sube/reemplaza estos archivos en tu repositorio GitHub english-vault.
+2. Vercel hará un nuevo deployment automáticamente.
+3. En Vercel abre tu proyecto -> Settings -> Environment Variables.
+4. Añade:
+   Name: OPENAI_API_KEY
+   Value: tu clave de OpenAI API
+   Environment: Production (y Preview si quieres probar ramas/preview)
+5. Guarda la variable.
+6. Haz Redeploy del último deployment para que la función /api/autofill reciba la variable.
 
-PASOS RECOMENDADOS
+FUNCIONES:
+- Pronunciación UK/US: no necesita API.
+- Surprise me: no necesita API; usa un banco local de palabras nuevas.
+- Autofill with AI: necesita OPENAI_API_KEY.
 
-1. Crea una cuenta gratuita en GitHub si no tienes una.
-2. Crea un repositorio nuevo, por ejemplo: english-vault.
-3. Sube TODOS los archivos y carpetas que hay dentro de este ZIP a la raíz del repositorio.
-   Importante: package.json debe quedar en la raíz del repositorio, no dentro de otra carpeta.
-4. Entra en Vercel e inicia sesión con GitHub.
-5. Pulsa Add New > Project.
-6. Importa el repositorio english-vault.
-7. En la configuración del proyecto usa:
-   - Framework Preset: Create React App
-   - Build Command: yarn build
-   - Output Directory: build
-   - Install Command: yarn install
-8. No añadas ninguna Environment Variable.
-9. Pulsa Deploy.
-10. Al terminar, Vercel te dará una URL pública gratuita.
-
-IMPORTANTE SOBRE LOS DATOS
-- Las palabras se guardan en localStorage del navegador.
-- Si abres la app en otro navegador o dispositivo, ese dispositivo tendrá su propio almacenamiento.
-- Usa Export Vault para hacer una copia de seguridad JSON e Import Vault para restaurarla en otro dispositivo.
+IMPORTANTE:
+- Nunca pongas OPENAI_API_KEY dentro de src/ ni la subas a GitHub.
+- Los datos del Vault se guardan en localStorage del navegador.

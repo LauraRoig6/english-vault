@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Sparkles, Volume2 } from 'lucide-react';
 
 
 const typeOptions = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
@@ -23,6 +23,8 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
   const [copyStatus, setCopyStatus] = useState('');
   const [quickText, setQuickText] = useState('');
   const [quickStatus, setQuickStatus] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiStatus, setAiStatus] = useState('');
 
   // Live duplicate check as user types the word
   useEffect(() => {
@@ -49,21 +51,12 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       });
     } else if (prefillRecord) {
       const allowed = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
+      const safe = Object.fromEntries(Object.keys(emptyForm).map((k) => [k, prefillRecord[k] ?? emptyForm[k]]));
       setForm({
         ...emptyForm,
+        ...safe,
         type: allowed.includes(prefillRecord.type) ? prefillRecord.type : 'Vocabulary',
         word: prefillRecord.word || '',
-        meaning: prefillRecord.meaning || '',
-        spanish: prefillRecord.spanish || '',
-        example: prefillRecord.example || '',
-        register: prefillRecord.register || '',
-        level: prefillRecord.level || '',
-        variety: prefillRecord.variety || '',
-        topic: prefillRecord.topic || '',
-        tags: prefillRecord.tags || '',
-        synonyms: prefillRecord.synonyms || '',
-        related: prefillRecord.related || '',
-        notes: prefillRecord.notes || '',
       });
     } else {
       setForm(emptyForm);
@@ -182,6 +175,49 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
     }
   };
 
+
+  const speak = (lang) => {
+    const text = form.word.trim();
+    if (!text || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = lang;
+    utter.rate = 0.95;
+    const voices = window.speechSynthesis.getVoices();
+    const exact = voices.find((v) => (v.lang || '').toLowerCase() === lang.toLowerCase());
+    const broad = voices.find((v) => (v.lang || '').toLowerCase().startsWith(lang.slice(0, 2).toLowerCase()));
+    if (exact || broad) utter.voice = exact || broad;
+    window.speechSynthesis.speak(utter);
+  };
+
+  const handleAiAutofill = async () => {
+    const word = form.word.trim();
+    if (!word) { setAiStatus('Write a word, expression or grammar point first.'); return; }
+    setAiLoading(true);
+    setAiStatus('Filling the entry…');
+    try {
+      const response = await fetch('/api/autofill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word, type: form.type }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || 'Autofill failed.');
+      const allowedKeys = Object.keys(emptyForm);
+      const updates = {};
+      allowedKeys.forEach((k) => {
+        if (data[k] !== undefined && typeof data[k] !== 'boolean') updates[k] = data[k];
+      });
+      updates.word = data.word || word;
+      setForm((f) => ({ ...f, ...updates, my_example: f.my_example || '' }));
+      setAiStatus('Done ✨ Review it before saving.');
+    } catch (err) {
+      setAiStatus(err?.message || 'Could not autofill this entry.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const isPhrasal = form.type === 'Phrasal Verb';
   const isSlang = form.type === 'Slang';
   const isTrick = form.type === 'Grammar / Trick';
@@ -224,6 +260,12 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
                   <span style={{ color: '#a67b8b' }}>Si es una variante distinta, sigue escribiendo (ej. “banana peeled”) y podrás guardar.</span>
                 </div>
               )}
+              <div className="flex flex-wrap gap-2 mt-2">
+                <button className="soft-btn text-xs" type="button" onClick={() => speak('en-GB')} disabled={!form.word.trim()} title="British pronunciation"><Volume2 size={14} style={{ display: 'inline', marginRight: 4 }} />UK</button>
+                <button className="soft-btn text-xs" type="button" onClick={() => speak('en-US')} disabled={!form.word.trim()} title="American pronunciation"><Volume2 size={14} style={{ display: 'inline', marginRight: 4 }} />US</button>
+                <button className="primary-btn text-xs" type="button" onClick={handleAiAutofill} disabled={aiLoading || !form.word.trim()} style={{ padding: '8px 12px' }}><Sparkles size={14} style={{ display: 'inline', marginRight: 5 }} />{aiLoading ? 'Filling…' : 'Autofill with AI'}</button>
+              </div>
+              {aiStatus && <p className="mt-2 text-xs" style={{ color: aiStatus.startsWith('Done') ? '#4d7350' : '#9d4f6e' }}>{aiStatus}</p>}
             </div>
           </div>
 

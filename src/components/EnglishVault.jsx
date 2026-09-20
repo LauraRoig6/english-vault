@@ -7,6 +7,7 @@ import PracticeView from './PracticeView';
 import EntryModal from './EntryModal';
 import DetailModal from './DetailModal';
 import { Search, Dice5, Plus, House, LibraryBig, GraduationCap, Heart } from 'lucide-react';
+import surpriseBank from '../surpriseBank';
 
 export default function EnglishVault() {
   const { records, create, update, remove, replaceAll } = useVault();
@@ -162,9 +163,23 @@ export default function EnglishVault() {
   };
 
   const handleSurprise = () => {
-    if (!records.length) return;
-    const random = records[Math.floor(Math.random() * records.length)];
-    setDetailRecord(random);
+    const saved = new Set(records.map((r) => (r.word || '').trim().toLowerCase()));
+    const unseen = surpriseBank.filter((item) => !saved.has((item.word || '').trim().toLowerCase()));
+    if (unseen.length) {
+      const suggestion = unseen[Math.floor(Math.random() * unseen.length)];
+      setEditingRecord(null);
+      setPrefillRecord(suggestion);
+      setEntryModalOpen(true);
+      showToast(`New discovery: “${suggestion.word}” ✨`);
+      return;
+    }
+    if (records.length) {
+      const random = records[Math.floor(Math.random() * records.length)];
+      setDetailRecord(random);
+      showToast('You have discovered the whole surprise bank — here is one from your vault.');
+    } else {
+      showToast('No surprise available yet.');
+    }
   };
 
   const handleExport = () => {
