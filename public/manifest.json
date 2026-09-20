@@ -1,0 +1,14 @@
+{
+  "short_name": "English Vault",
+  "name": "English Vault — collect the English you love",
+  "description": "Your gentle place to collect and practise English vocabulary, slang, phrasal verbs and more.",
+  "icons": [
+    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#fbe4ec",
+  "background_color": "#fff9fb"
+}

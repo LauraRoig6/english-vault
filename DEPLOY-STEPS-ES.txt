@@ -1,0 +1,27 @@
+ENGLISH VAULT — PUBLICAR GRATIS EN VERCEL
+
+Esta versión funciona sin backend y guarda las entradas en el navegador (localStorage).
+No necesitas MongoDB ni variables de entorno.
+
+PASOS RECOMENDADOS
+
+1. Crea una cuenta gratuita en GitHub si no tienes una.
+2. Crea un repositorio nuevo, por ejemplo: english-vault.
+3. Sube TODOS los archivos y carpetas que hay dentro de este ZIP a la raíz del repositorio.
+   Importante: package.json debe quedar en la raíz del repositorio, no dentro de otra carpeta.
+4. Entra en Vercel e inicia sesión con GitHub.
+5. Pulsa Add New > Project.
+6. Importa el repositorio english-vault.
+7. En la configuración del proyecto usa:
+   - Framework Preset: Create React App
+   - Build Command: yarn build
+   - Output Directory: build
+   - Install Command: yarn install
+8. No añadas ninguna Environment Variable.
+9. Pulsa Deploy.
+10. Al terminar, Vercel te dará una URL pública gratuita.
+
+IMPORTANTE SOBRE LOS DATOS
+- Las palabras se guardan en localStorage del navegador.
+- Si abres la app en otro navegador o dispositivo, ese dispositivo tendrá su propio almacenamiento.
+- Usa Export Vault para hacer una copia de seguridad JSON e Import Vault para restaurarla en otro dispositivo.
