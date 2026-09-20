@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plus, BookMarked, MessageCircle, Link2, Quote, GitBranch, Puzzle, Lightbulb, Brain, Heart } from 'lucide-react';
+import { Plus, Sparkles, BookMarked, MessageCircle, Link2, Quote, GitBranch, Puzzle, Lightbulb, Brain, Heart } from 'lucide-react';
 
 
 function Chip({ kind, children }) {
@@ -7,7 +7,7 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
-export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail }) {
+export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading }) {
   const stats = useMemo(() => {
     const counts = { Vocabulary: 0, Slang: 0, 'Phrasal Verb': 0, Expression: 0, Collocation: 0, Idiom: 0, 'Connector / Linker': 0, 'Grammar / Trick': 0 };
     records.forEach((r) => { if (counts[r.type] !== undefined) counts[r.type]++; });
@@ -47,6 +47,9 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
           <div className="flex flex-wrap gap-3 mt-6">
             <button className="primary-btn inline-flex gap-2 items-center" type="button" onClick={onOpenAdd}>
               <Plus size={18} /><span>Add a new discovery</span>
+            </button>
+            <button className="soft-btn inline-flex gap-2 items-center" type="button" onClick={onDiscoverSurprise} disabled={surpriseLoading}>
+              <Sparkles size={18} /><span>{surpriseLoading ? 'Finding a surprise…' : 'Surprise me · discover something new'}</span>
             </button>
           </div>
         </div>

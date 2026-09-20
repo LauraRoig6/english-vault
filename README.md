@@ -21,3 +21,8 @@ The `/api/autofill` function uses `gpt-5.6-luna` through the OpenAI Responses AP
 
 ## Privacy / storage
 Vault entries are stored locally in the current browser. Use Export/Import to move them between browsers or devices.
+
+## Surprise behaviour
+- Top-bar **Surprise me** opens a random entry already saved in the vault.
+- Home hero **Surprise me · discover something new** asks the AI for a new unsaved discovery.
+- **See full info** generates the complete AI entry and opens the normal Add form. Nothing is saved until **Save entry** is pressed.

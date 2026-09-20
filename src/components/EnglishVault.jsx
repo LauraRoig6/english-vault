@@ -6,8 +6,8 @@ import LibraryView from './LibraryView';
 import PracticeView from './PracticeView';
 import EntryModal from './EntryModal';
 import DetailModal from './DetailModal';
+import SurpriseDiscoveryModal from './SurpriseDiscoveryModal';
 import { Search, Dice5, Plus, House, LibraryBig, GraduationCap, Heart } from 'lucide-react';
-import surpriseBank from '../surpriseBank';
 
 export default function EnglishVault() {
   const { records, create, update, remove, replaceAll } = useVault();
@@ -21,6 +21,10 @@ export default function EnglishVault() {
   const [editingRecord, setEditingRecord] = useState(null);
   const [prefillRecord, setPrefillRecord] = useState(null);
   const [detailRecord, setDetailRecord] = useState(null);
+  const [surpriseModalOpen, setSurpriseModalOpen] = useState(false);
+  const [surpriseSuggestion, setSurpriseSuggestion] = useState(null);
+  const [surpriseLoading, setSurpriseLoading] = useState(false);
+  const [surpriseError, setSurpriseError] = useState('');
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const undoBufferRef = useRef(null);
@@ -162,24 +166,51 @@ export default function EnglishVault() {
     });
   };
 
+  // Top-bar Surprise me: revisit something that is already saved in the vault.
   const handleSurprise = () => {
-    const saved = new Set(records.map((r) => (r.word || '').trim().toLowerCase()));
-    const unseen = surpriseBank.filter((item) => !saved.has((item.word || '').trim().toLowerCase()));
-    if (unseen.length) {
-      const suggestion = unseen[Math.floor(Math.random() * unseen.length)];
-      setEditingRecord(null);
-      setPrefillRecord(suggestion);
-      setEntryModalOpen(true);
-      showToast(`New discovery: “${suggestion.word}” ✨`);
+    if (!records.length) {
+      showToast('Your vault is empty — add a discovery first.');
       return;
     }
-    if (records.length) {
-      const random = records[Math.floor(Math.random() * records.length)];
-      setDetailRecord(random);
-      showToast('You have discovered the whole surprise bank — here is one from your vault.');
-    } else {
-      showToast('No surprise available yet.');
+    const random = records[Math.floor(Math.random() * records.length)];
+    setDetailRecord(random);
+    showToast(`From your vault: “${random.word}”`);
+  };
+
+  // Home hero Surprise me: ask AI for something genuinely new, without saving it.
+  const handleDiscoverSurprise = async () => {
+    setSurpriseModalOpen(true);
+    setSurpriseSuggestion(null);
+    setSurpriseError('');
+    setSurpriseLoading(true);
+    try {
+      const response = await fetch('/api/surprise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exclude: records.map((r) => r.word).filter(Boolean) }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || 'Could not generate a surprise.');
+      setSurpriseSuggestion(data);
+    } catch (err) {
+      setSurpriseError(err?.message || 'Could not generate a surprise.');
+    } finally {
+      setSurpriseLoading(false);
     }
+  };
+
+  const handleSurpriseSeeMore = async (suggestion) => {
+    const response = await fetch('/api/autofill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word: suggestion.word, type: suggestion.type }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.error || 'Could not generate the full entry.');
+    setSurpriseModalOpen(false);
+    setEditingRecord(null);
+    setPrefillRecord(data);
+    setEntryModalOpen(true);
   };
 
   const handleExport = () => {
@@ -258,6 +289,8 @@ export default function EnglishVault() {
             onOpenCategory={openCategory}
             onOpenAdd={openAdd}
             onOpenDetail={setDetailRecord}
+            onDiscoverSurprise={handleDiscoverSurprise}
+            surpriseLoading={surpriseLoading}
           />
         )}
 
@@ -305,6 +338,17 @@ export default function EnglishVault() {
           <Heart size={20} /><span>Saved</span>
         </button>
       </nav>
+
+      {surpriseModalOpen && (
+        <SurpriseDiscoveryModal
+          suggestion={surpriseSuggestion}
+          loading={surpriseLoading}
+          error={surpriseError}
+          onClose={() => { setSurpriseModalOpen(false); setSurpriseSuggestion(null); setSurpriseError(''); }}
+          onAnother={handleDiscoverSurprise}
+          onSeeMore={handleSurpriseSeeMore}
+        />
+      )}
 
       {entryModalOpen && (
         <EntryModal
