@@ -69,23 +69,35 @@ function RelatedPills({ label, value, onRelatedClick, allRecords = [] }) {
   );
 }
 
-function LexicalCloud({ label, value, onClick, allRecords = [], tone = "pink" }) {
+function LexicalListCard({ label, value, onClick, allRecords = [], varySize = false, tone = 'pink' }) {
   const items = splitList(value);
   if (!items.length) return null;
   const existing = new Set(allRecords.map((r) => normalizeEntryText(r.word)));
   return (
-    <section className={`lexical-cloud cloud-${tone}`}>
+    <section className={`lexical-list-card tone-${tone}`}>
       <p className="text-xs font-bold tracking-widest m-0 detail-block-title">{label}</p>
-      <div className="lexical-cloud-items">{items.map((item,i)=>{ const inVault = existing.has(normalizeEntryText(item)); return <button key={item} type="button" className={inVault ? 'in-vault' : 'not-in-vault'} onClick={()=>onClick?.(item)} style={{fontSize:`${.76 + Math.min(i,3)*.07}rem`}}>{item}</button>; })}</div>
+      <div className="flex flex-wrap gap-2 mt-3">
+        {items.map((item, i) => {
+          const inVault = existing.has(normalizeEntryText(item));
+          const size = varySize ? `${0.72 + Math.min(i, 4) * 0.07}rem` : undefined;
+          return <button key={item} type="button" className={`related-pill ${inVault ? 'in-vault' : 'not-in-vault'}`} onClick={() => onClick?.(item)} style={size ? { fontSize: size } : undefined} title={inVault ? 'Open saved entry' : 'Add this to your Vault'}>{inVault && <Check size={12} />} {item} <ArrowUpRight size={12} /></button>;
+        })}
+      </div>
     </section>
   );
 }
 
-function WordFamilyGraph({ value, current, onClick, allRecords = [] }) {
-  const items = splitList(value);
+function TrickScheme({ text, fallback }) {
+  const source = String(text || fallback || '').trim();
+  if (!source) return null;
+  const parts = source.split(/\n|\s*[;•]\s*/).map(x => x.trim()).filter(Boolean).slice(0, 8);
+  return <section className="trick-scheme-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">VISUAL SCHEME</p><div className="trick-scheme-flow">{parts.map((x,i)=><React.Fragment key={i}><div className="trick-scheme-node">{x}</div>{i < parts.length - 1 && <div className="trick-scheme-arrow">→</div>}</React.Fragment>)}</div></section>;
+}
+
+function TrickExamples({ value }) {
+  const items = String(value || '').split(/\n+|\s*[;•]\s*/).map(x=>x.trim()).filter(Boolean);
   if (!items.length) return null;
-  const existing = new Set(allRecords.map((r) => normalizeEntryText(r.word)));
-  return <section className="word-family-graph"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">WORD FAMILY</p><div className="word-family-map"><span className="family-center">{current}</span>{items.map((x,i)=>{ const inVault = existing.has(normalizeEntryText(x)); return <button key={x} type="button" className={`family-node n${i%5} ${inVault ? 'in-vault' : 'not-in-vault'}`} onClick={()=>onClick?.(x)}>{x}</button>; })}</div></section>;
+  return <section className="trick-examples-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXAMPLES</p><div className="trick-example-grid">{items.slice(0,8).map((x,i)=><div key={i} className="trick-example-item"><span>{i+1}</span><p>{x}</p></div>)}</div></section>;
 }
 
 export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz, allRecords = [], onStatusChange, onUpdate }) {
@@ -121,15 +133,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
   const isTrick = record.type === 'Grammar / Trick';
   const usageWarning = record.usage_warning || (!isTrick ? record.offensive_warning : '');
 
-  const fields = isTrick ? [
-    ['Trick category', record.trick_category || record.separable],
-    ['Rule', record.rule || record.transitive],
-    ['Explanation', record.explanation || record.how_common],
-    ['Examples', record.examples_list || record.synonyms],
-    ['Exceptions', record.exceptions || record.offensive_warning],
-    ['Memory trick', record.memory_trick || record.related],
-    ['Common mistakes', record.common_mistakes || record.notes],
-  ] : [
+  const fields = isTrick ? [] : [
     ['Word class', record.word_class], ['Frequency', record.frequency], ['Naturalness note', record.naturalness_label],
     ['Why this is useful', record.why_useful], ['Semantic field', record.semantic_field], ['Etymology / origin', record.etymology], ['Common collocation mistake', record.collocation_mistake], ['Native alternative', record.native_alternative], ['Useful for exams', record.useful_for_exams], ['Register ladder', record.register_ladder], ['False friend', record.false_friend],
     ['Personal difficulty', record.personal_difficulty], ['Confidence', record.confidence], ['My mistakes', record.my_mistakes],
@@ -249,16 +253,33 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-5 mt-7">
-              {fields.filter(([, v]) => v).map(([label, value], index) => {
-                const tones = [
-                  ['#fff7fa','#efd3df','#9a7180'], ['#f7f4ff','#ded6f1','#6e6288'],
-                  ['#fffaf0','#eadcaf','#806a30'], ['#f2faf5','#d4e8da','#52705c'],
-                ];
-                const [bg,border,labelColor] = tones[index % tones.length];
-                return <section key={label} className="rounded-2xl p-4" style={{ background: bg, border: `1px solid ${border}` }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: labelColor }}>{label.toUpperCase()}</p><p className="leading-relaxed mt-2 whitespace-pre-line m-0">{value}</p></section>;
-              })}
-            </div>
+            {isTrick ? (
+              <div className="trick-detail-layout mt-6">
+                {(record.quick_summary || record.trick_category || record.separable) && <section className="trick-summary-card"><div><p className="text-xs font-bold tracking-widest m-0 detail-block-title">QUICK TAKE</p><h3>{record.quick_summary || record.rule || record.transitive}</h3></div>{(record.trick_category || record.separable) && <span className="chip chip-type">{record.trick_category || record.separable}</span>}</section>}
+                {(record.rule || record.transitive) && <section className="trick-rule-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">THE RULE</p><p>{record.rule || record.transitive}</p></section>}
+                <TrickScheme text={record.visual_scheme} fallback={record.rule || record.transitive} />
+                {(record.explanation || record.how_common) && <section className="trick-explain-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXPLANATION</p><RichText text={record.explanation || record.how_common} /></section>}
+                {record.choni_explanation && <section className="trick-choni-card"><div className="trick-choni-title"><span>💅</span><div><p className="text-xs font-bold tracking-widest m-0 detail-block-title">MODO CHONI · PERO CORRECTO</p><small>Para que se te quede sin perder rigor.</small></div></div><RichText text={record.choni_explanation} /></section>}
+                <TrickExamples value={record.examples_list || record.synonyms} />
+                <div className="grid md:grid-cols-2 gap-4">
+                  {(record.exceptions || record.offensive_warning) && <section className="trick-warning-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXCEPTIONS</p><p>{record.exceptions || record.offensive_warning}</p></section>}
+                  {(record.memory_trick || record.related) && <section className="trick-memory-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">MEMORY TRICK</p><p>{record.memory_trick || record.related}</p></section>}
+                  {(record.common_mistakes || record.notes) && <section className="trick-mistakes-card md:col-span-2"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">COMMON MISTAKES</p><RichText text={record.common_mistakes || record.notes} /></section>}
+                  {record.notes && record.common_mistakes && <section className="trick-notes-card md:col-span-2"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">NOTES</p><RichText text={record.notes} /></section>}
+                </div>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-5 mt-7">
+                {fields.filter(([, v]) => v).map(([label, value], index) => {
+                  const tones = [
+                    ['#fff7fa','#efd3df','#9a7180'], ['#f7f4ff','#ded6f1','#6e6288'],
+                    ['#fffaf0','#eadcaf','#806a30'], ['#f2faf5','#d4e8da','#52705c'],
+                  ];
+                  const [bg,border,labelColor] = tones[index % tones.length];
+                  return <section key={label} className="rounded-2xl p-4" style={{ background: bg, border: `1px solid ${border}` }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: labelColor }}>{label.toUpperCase()}</p><p className="leading-relaxed mt-2 whitespace-pre-line m-0">{value}</p></section>;
+                })}
+              </div>
+            )}
 
             {usageWarning && (
               <section className="mt-6 rounded-2xl p-4" style={{ background: '#fff7df', border: '1px solid #ead59a' }}>
@@ -276,8 +297,8 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
                   <RelatedPills label="ANTONYMS" value={record.antonyms} onRelatedClick={onRelatedClick} allRecords={allRecords} />
                   <RelatedPills label="CONFUSED WITH" value={record.confused_with} onRelatedClick={onRelatedClick} allRecords={allRecords} />
                   <RelatedPills label="RELATED PHRASAL VERBS" value={record.similar_expressions} onRelatedClick={onRelatedClick} allRecords={allRecords} />
-                  <WordFamilyGraph value={record.word_family} current={record.word} onClick={onRelatedClick} allRecords={allRecords} />
-                  <LexicalCloud label="COLLOCATION CLOUD" value={record.typical_collocations} onClick={onRelatedClick} allRecords={allRecords} tone="sage" />
+                  <LexicalListCard label="WORD FAMILY" value={record.word_family} onClick={onRelatedClick} allRecords={allRecords} tone="lavender" />
+                  <LexicalListCard label="COLLOCATION CLOUD" value={record.typical_collocations} onClick={onRelatedClick} allRecords={allRecords} varySize tone="sage" />
                 </div>
               </section>
             )}
@@ -298,7 +319,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
         {!isTrick && detailTab === 'ai' && (
           <section className="mt-5 rounded-2xl p-4" style={{ background: '#fffafc', border: '1px solid #efd3df' }}>
             <p className="eyebrow" style={{ marginBottom: '8px' }}>AI study help</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="ai-primary-actions">
               <button className="soft-btn" type="button" onClick={() => askAiHelp('contexts')} disabled={!!helpLoading}><Sparkles size={15} style={{ display: 'inline', marginRight: 5 }} />{helpLoading === 'contexts' ? 'Generating…' : '3 context examples'}</button>
               <button className="soft-btn" type="button" onClick={() => askAiHelp('spanish')} disabled={!!helpLoading}><Languages size={15} style={{ display: 'inline', marginRight: 5 }} />{helpLoading === 'spanish' ? 'Explicando…' : 'Explícamelo en español'}</button>
               <button className="soft-btn" type="button" onClick={() => askAiHelp('improve')} disabled={!!helpLoading}><WandSparkles size={15} style={{ display: 'inline', marginRight: 5 }} />{helpLoading === 'improve' ? 'Checking…' : 'Improve this entry'}</button>
@@ -374,7 +395,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           <div className="flex gap-2"><button className="soft-btn" type="button" onClick={() => onEdit(record)}>Edit</button><button className="soft-btn" type="button" onClick={onClose}>Close</button></div>
         </div>
 
-        <div className="share-style-picker mt-5"><span>Share card style:</span>{['lace','minimal','notebook'].map(x=><button key={x} type="button" className={shareStyle===x?'active':''} onClick={()=>setShareStyle(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div>
+        <div className="share-style-picker mt-5"><span>Share card style:</span>{['lace','minimal'].map(x=><button key={x} type="button" className={shareStyle===x?'active':''} onClick={()=>setShareStyle(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div>
 
         <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
           <div ref={shareRef} className={`share-card share-${shareStyle}`} style={{ width: '540px', padding: '48px', fontFamily: "'DM Sans', sans-serif", color: '#3d3540' }}>

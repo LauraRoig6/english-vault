@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2, Zap } from 'lucide-react';
+import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2, Zap, Languages, SlidersHorizontal } from 'lucide-react';
 
 function speakWord(text, lang = 'en-US') {
   if (!text) return;
@@ -218,7 +218,7 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
       </div>
 
       {record.pronunciation_easy && <div className="entry-pronunciation">🗣 {record.pronunciation_easy}</div>}
-      {record.spanish && <div className="entry-spanish">🇪🇸 <strong>{record.spanish}</strong></div>}
+      {record.spanish && <div className="entry-spanish"><Languages size={14} aria-hidden="true" /> <strong>{record.spanish}</strong></div>}
 
       {!isTrick && (
         <div className="entry-definition-block">
@@ -273,6 +273,7 @@ export default function LibraryView({
   const [sort, setSort] = useState('newest');
   const [pills, setPills] = useState({ favourite: false, difficult: false, reviewing: false });
   const [displayMode, setDisplayMode] = useState(() => localStorage.getItem('ev-library-view') || 'cozy');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [savedSearches, setSavedSearches] = useState(() => { try { return JSON.parse(localStorage.getItem('ev-saved-searches') || '[]'); } catch { return []; } });
   const [saveName, setSaveName] = useState('');
   useEffect(()=>localStorage.setItem('ev-library-view',displayMode),[displayMode]);
@@ -477,8 +478,13 @@ export default function LibraryView({
         </div>
       )}
 
-      {/* Filters */}
-      <div className="card p-4 mb-6">
+      {/* Compact filter controls */}
+      <div className="library-filter-bar mb-4">
+        <button className={`soft-btn filter-toggle ${filtersOpen ? 'active' : ''}`} type="button" onClick={() => setFiltersOpen((v) => !v)}><SlidersHorizontal size={15} /> Filters</button>
+        <div className="view-switch compact-switch"><span>View</span>{['cozy','compact'].map(v=><button key={v} className={displayMode===v?'active':''} onClick={()=>setDisplayMode(v)}>{v}</button>)}</div>
+      </div>
+
+      {filtersOpen && <div className="card p-4 mb-6 filter-drawer">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="field"><label>TYPE</label>
             <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
@@ -534,8 +540,8 @@ export default function LibraryView({
           <button className="soft-btn text-xs py-2" style={pills.reviewing ? { background: '#fbe4ec', borderColor: '#d986a5', color: '#9d4f6e' } : {}} onClick={() => setPills({ ...pills, reviewing: !pills.reviewing })}>↻ Need to review</button>
           <button className="text-xs font-bold px-2 bg-transparent border-0" style={{ color: '#9d4f6e', cursor: 'pointer' }} onClick={clearFilters}>Clear filters</button>
         </div>
-        <div className="library-tools mt-4"><div className="view-switch"><span>Card view</span>{['cozy','compact'].map(v=><button key={v} className={displayMode===v?'active':''} onClick={()=>setDisplayMode(v)}>{v}</button>)}</div><div className="saved-searches"><input value={saveName} onChange={e=>setSaveName(e.target.value)} placeholder="Name this filter view"/><button className="soft-btn" type="button" onClick={saveCurrentSearch}>Save filters</button>{savedSearches.map((v,i)=><span key={v.name}><button type="button" className="saved-view-chip" onClick={()=>applySavedSearch(v)}>{v.name}</button><button className="saved-view-x" onClick={()=>setSavedSearches(x=>x.filter((_,j)=>j!==i))}>×</button></span>)}</div></div>
-      </div>
+        <div className="library-tools mt-4"><div className="saved-searches"><input value={saveName} onChange={e=>setSaveName(e.target.value)} placeholder="Name this filter view"/><button className="soft-btn" type="button" onClick={saveCurrentSearch}>Save filters</button>{savedSearches.map((v,i)=><span key={v.name}><button type="button" className="saved-view-chip" onClick={()=>applySavedSearch(v)}>{v.name}</button><button className="saved-view-x" onClick={()=>setSavedSearches(x=>x.filter((_,j)=>j!==i))}>×</button></span>)}</div></div>
+      </div>}
 
       <div className={`grid ${displayMode==='compact'?'sm:grid-cols-2 xl:grid-cols-4':'sm:grid-cols-2 xl:grid-cols-3'} gap-4 ${currentView === 'tricks' ? 'tricks-layout' : ''}`}>
         {filtered.length === 0 ? (

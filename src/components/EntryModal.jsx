@@ -10,7 +10,7 @@ const emptyForm = {
   register: '', level: '', variety: '', topic: '', tags: '', notes: '',
   synonyms: '', antonyms: '', related: '', pattern_structure: '', confused_with: '', usage_warning: '', pronunciation_easy: '', word_family: '', typical_collocations: '', best_for: '', avoid_overusing: '', mini_contrast: '', word_class: '', frequency: '', naturalness_score: '', naturalness_label: '', native_alternative: '', useful_for_exams: '', register_ladder: '', my_mistakes: '', personal_difficulty: '', confidence: '', why_useful: '', false_friend: '', etymology: '', variety_usage: '', collocation_mistake: '', sounds_better_as: '', semantic_field: '', personal_note: '', separable: '', transitive: '', similar_expressions: '',
   how_common: '', offensive_warning: '', slang_tags: '',
-  trick_category: '', rule: '', explanation: '', examples_list: '', exceptions: '', memory_trick: '', common_mistakes: '',
+  trick_category: '', rule: '', explanation: '', quick_summary: '', visual_scheme: '', choni_explanation: '', examples_list: '', exceptions: '', memory_trick: '', common_mistakes: '',
   is_favourite: false, is_difficult: false, is_known: false, needs_review: true, i_confuse_this: false,
 };
 
@@ -30,7 +30,7 @@ function copyTemplate(word = '', type = 'Vocabulary') {
   if (type === 'Grammar / Trick') {
     return `NEW DISCOVERY\n\n${[
       ['TYPE', type], ['WORD / EXPRESSION', String(word || '').trim().toLowerCase()], ['MEANING IN ENGLISH', ''], ['SPANISH', ''], ['NATURAL EXAMPLE', ''], ['MY EXAMPLE', ''],
-      ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''], ['TRICK CATEGORY', ''], ['RULE', ''], ['EXPLANATION', ''], ['EXAMPLES', ''], ['EXCEPTIONS', ''], ['MEMORY TRICK', ''], ['COMMON MISTAKES', ''], ['NOTES', ''],
+      ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''], ['TRICK CATEGORY', ''], ['QUICK SUMMARY', ''], ['RULE', ''], ['VISUAL SCHEME', ''], ['EXPLANATION', ''], ['CHONI EXPLANATION', ''], ['EXAMPLES', ''], ['EXCEPTIONS', ''], ['MEMORY TRICK', ''], ['COMMON MISTAKES', ''], ['NOTES', ''],
     ].map(([k,v]) => `${k}: ${v}`).join('\n')}`;
   }
   return `NEW DISCOVERY\n\n${common.map(([k,v]) => `${k}: ${v}`).join('\n')}`;
@@ -126,7 +126,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       offensive_warning: isTrick ? form.exceptions : (form.type === 'Slang' ? (form.usage_warning || form.offensive_warning) : form.offensive_warning),
       notes: form.notes,
       common_mistakes: form.common_mistakes,
-      trick_category: form.trick_category, rule: form.rule, explanation: form.explanation, examples_list: form.examples_list, exceptions: form.exceptions, memory_trick: form.memory_trick,
+      trick_category: form.trick_category, rule: form.rule, explanation: form.explanation, quick_summary: form.quick_summary, visual_scheme: form.visual_scheme, choni_explanation: form.choni_explanation, examples_list: form.examples_list, exceptions: form.exceptions, memory_trick: form.memory_trick,
       similar_expressions: form.similar_expressions,
       slang_tags: form.slang_tags,
       review_count: form.review_count || 0,
@@ -194,8 +194,11 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       'USAGE WARNING': 'usage_warning',
       'SLANG TAGS': 'slang_tags',
       'TRICK CATEGORY': 'trick_category',
+      'QUICK SUMMARY': 'quick_summary',
       'RULE': 'rule',
+      'VISUAL SCHEME': 'visual_scheme',
       'EXPLANATION': 'explanation',
+      'CHONI EXPLANATION': 'choni_explanation',
       'EXAMPLES': 'examples_list',
       'EXCEPTIONS': 'exceptions',
       'MEMORY TRICK': 'memory_trick',
@@ -435,8 +438,11 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             </>}
             {isTrick && <>
               <div className="field"><label>TRICK CATEGORY</label><input value={form.trick_category} onChange={(e) => set('trick_category', e.target.value)} /></div>
-              <div className="field"><label>RULE</label><input value={form.rule} onChange={(e) => set('rule', e.target.value)} /></div>
+              <div className="field"><label>QUICK SUMMARY</label><input value={form.quick_summary} onChange={(e) => set('quick_summary', e.target.value)} placeholder="One-line takeaway" /></div>
+              <div className="field md:col-span-2"><label>RULE</label><input value={form.rule} onChange={(e) => set('rule', e.target.value)} /></div>
+              <div className="field md:col-span-2"><label>VISUAL SCHEME</label><textarea value={form.visual_scheme} onChange={(e) => set('visual_scheme', e.target.value)} placeholder="Use short lines/arrows, e.g. IN → inside · ON → surface · AT → point" /></div>
               <div className="field md:col-span-2"><label>EXPLANATION</label><textarea value={form.explanation} onChange={(e) => set('explanation', e.target.value)} /></div>
+              <div className="field md:col-span-2"><label>CHONI EXPLANATION</label><textarea value={form.choni_explanation} onChange={(e) => set('choni_explanation', e.target.value)} placeholder="Funny, memorable Spanish explanation that stays accurate" /></div>
               <div className="field md:col-span-2"><label>EXAMPLES</label><textarea value={form.examples_list} onChange={(e) => set('examples_list', e.target.value)} /></div>
               <div className="field"><label>EXCEPTIONS</label><textarea value={form.exceptions} onChange={(e) => set('exceptions', e.target.value)} /></div>
               <div className="field"><label>MEMORY TRICK</label><textarea value={form.memory_trick} onChange={(e) => set('memory_trick', e.target.value)} /></div>
