@@ -4,7 +4,7 @@ const schema = {
   type: 'object',
   additionalProperties: false,
   required: [
-    'type','word','meaning','spanish','example','my_example','register','level','variety','topic','tags','synonyms','related',
+    'type','word','meaning','spanish','example','my_example','register','level','variety','topic','tags','synonyms','related','pattern_structure','confused_with','usage_warning',
     'separable','transitive','similar_expressions','how_common','offensive_warning','slang_tags','trick_category','rule','explanation',
     'examples_list','exceptions','memory_trick','common_mistakes','notes'
   ],
@@ -15,6 +15,7 @@ const schema = {
     level: { type: 'string', enum: ['', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Native-like'] },
     variety: { type: 'string', enum: ['', 'British English', 'American English', 'Both'] },
     topic: { type: 'string' }, tags: { type: 'string' }, synonyms: { type: 'string' }, related: { type: 'string' },
+    pattern_structure: { type: 'string' }, confused_with: { type: 'string' }, usage_warning: { type: 'string' },
     separable: { type: 'string' }, transitive: { type: 'string' }, similar_expressions: { type: 'string' }, how_common: { type: 'string' },
     offensive_warning: { type: 'string' }, slang_tags: { type: 'string' }, trick_category: { type: 'string' }, rule: { type: 'string' },
     explanation: { type: 'string' }, examples_list: { type: 'string' }, exceptions: { type: 'string' }, memory_trick: { type: 'string' },
@@ -31,7 +32,7 @@ module.exports = async function handler(req, res) {
   const typeHint = typeof req.body?.type === 'string' ? req.body.type.trim() : '';
   if (!rawWord || rawWord.length > 160) return res.status(400).json({ error: 'Enter a word, expression or grammar point first.' });
 
-  const instructions = `You fill entries for a personal English-learning app called English Vault. Use natural, accurate modern English and useful Spanish translations. Prefer British English spelling when there is no reason to prefer American English. Infer the most useful category from these exact options: ${ALLOWED_TYPES.join(', ')}. The user's current type selection is only a hint and may be wrong. Use concise but pedagogically useful content. For fields irrelevant to the chosen category, return an empty string. Never use em dashes as placeholders. For Grammar / Trick, fully populate trick_category, rule, explanation, examples_list, exceptions, memory_trick and common_mistakes. For Phrasal Verb, populate separable, transitive and similar_expressions. For Slang, populate how_common, offensive_warning and slang_tags. For Connector / Linker, make the function in discourse clear. Do not invent a MY EXAMPLE for the learner: my_example must be an empty string.`;
+  const instructions = `You fill entries for a personal English-learning app called English Vault. Use natural, accurate modern English and useful Spanish translations. Prefer British English spelling when there is no reason to prefer American English. Infer the most useful category from these exact options: ${ALLOWED_TYPES.join(', ')}. The user's current type selection is only a hint and may be wrong. Use concise but pedagogically useful content. For fields irrelevant to the chosen category, return an empty string. Populate pattern_structure when there is a useful grammatical pattern, complement or construction. Populate confused_with only when there is a genuinely useful commonly confused item. Populate usage_warning whenever register, grammar, connotation, countability, collocation or context could cause a learner mistake. Never use em dashes as placeholders. For Grammar / Trick, fully populate trick_category, rule, explanation, examples_list, exceptions, memory_trick and common_mistakes. For Phrasal Verb, populate separable, transitive and similar_expressions. For Slang, populate how_common, usage_warning and slang_tags. Keep offensive_warning empty unless it is needed for backward compatibility. For Connector / Linker, make the function in discourse clear. Do not invent a MY EXAMPLE for the learner: my_example must be an empty string.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/responses', {

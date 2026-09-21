@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Plus, Sparkles, BookMarked, MessageCircle, Link2, Quote, GitBranch, Puzzle, Lightbulb, Brain, Heart } from 'lucide-react';
+import { Plus, Sparkles, BookMarked, MessageCircle, Link2, Quote, GitBranch, Puzzle, Lightbulb, Brain, Heart, Clock3 } from 'lucide-react';
+import { isDue } from '../lib/vaultUtils';
 
 
 function Chip({ kind, children }) {
@@ -7,14 +8,19 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
-export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading }) {
+export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue }) {
   const stats = useMemo(() => {
     const counts = { Vocabulary: 0, Slang: 0, 'Phrasal Verb': 0, Expression: 0, Collocation: 0, Idiom: 0, 'Connector / Linker': 0, 'Grammar / Trick': 0 };
     records.forEach((r) => { if (counts[r.type] !== undefined) counts[r.type]++; });
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     return {
       counts,
       favourites: records.filter((r) => r.is_favourite).length,
-      reviewCount: records.filter((r) => r.needs_review && !r.is_known).length,
+      reviewCount: records.filter((r) => isDue(r)).length,
+      learning: records.filter((r) => (r.status || 'New') === 'Learning').length,
+      almost: records.filter((r) => r.status === 'Almost learnt').length,
+      mastered: records.filter((r) => r.status === 'Mastered' || r.is_known).length,
+      addedWeek: records.filter((r) => new Date(r.created_at || 0).getTime() >= weekAgo).length,
     };
   }, [records]);
 
@@ -55,6 +61,17 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
         </div>
       </section>
 
+
+      <section className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-7">
+        {[
+          ['Total', records.length], ['Learning', stats.learning], ['Almost learnt', stats.almost], ['Mastered', stats.mastered], ['Added this week', stats.addedWeek],
+        ].map(([label, value]) => (
+          <article key={label} className="card p-4">
+            <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>
+            <p className="m-0 mt-2" style={{ fontFamily: "'Fraunces', serif", fontSize: '1.8rem', fontWeight: 700 }}>{value}</p>
+          </article>
+        ))}
+      </section>
 
       {/* Categories */}
       <section className="mt-8">
@@ -117,9 +134,11 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
         </article>
 
         <article className="card pastel-lavender p-5">
-          <p className="font-bold text-lg m-0">Ready to practise?</p>
-          <p className="text-sm mt-2">{stats.reviewCount} discoveries waiting for you</p>
-          <button className="primary-btn mt-6 w-full" type="button" onClick={() => onNavigate('practice')}>Start practice →</button>
+          <p className="font-bold text-lg m-0"><Clock3 size={18} style={{ display: 'inline', marginRight: 6 }} />Review due</p>
+          <p className="text-sm mt-2">{stats.reviewCount} {stats.reviewCount === 1 ? 'discovery is' : 'discoveries are'} ready for review</p>
+          <button className="primary-btn mt-6 w-full" type="button" onClick={onStartDue || (() => onNavigate('practice'))} disabled={!stats.reviewCount}>
+            {stats.reviewCount ? 'Review due now →' : 'Nothing due today ✦'}
+          </button>
         </article>
       </div>
     </section>

@@ -1,0 +1,26 @@
+ENGLISH VAULT — GRAN ACTUALIZACIÓN
+
+Incluye:
+- Common Mistakes como campo real visible/editable.
+- Pattern / Structure.
+- Confused With.
+- Usage Warning destacado en la ficha.
+- Formulario dinámico por tipo.
+- Detección de duplicados ignorando mayúsculas, puntuación y espacios.
+- Aviso de entradas relacionadas sin bloquear el guardado.
+- Búsqueda fuzzy y filtros combinables.
+- Tags clicables.
+- Synonyms / Related Expressions / Confused With / Related Phrasal Verbs clicables.
+- 3 context examples con IA.
+- Explícamelo en español.
+- Quiz me on this.
+- My Example destacado visualmente.
+- Recently Added.
+- Review Due con inicio directo de sesión.
+- Mini estadísticas en Home.
+- Export / Import de backup.
+- Sincronización Supabase conservada.
+- PWA conservada (manifest + iconos + standalone).
+
+No requiere cambios nuevos en Supabase: los campos nuevos se guardan dentro del JSON de cada entrada.
+No requiere variables nuevas en Vercel.

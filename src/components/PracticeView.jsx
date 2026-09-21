@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const isDue = (r) => !r.next_review_at || String(r.next_review_at).slice(0, 10) <= today();
@@ -35,7 +35,7 @@ function metaChips(r) {
 
 const norm = (s) => String(s || '').toLowerCase().trim().replace(/\s+/g, ' ').replace(/[.!?]+$/, '');
 
-export default function PracticeView({ records, onUpdate, onToast }) {
+export default function PracticeView({ records, onUpdate, onToast, focusRecords = [], focusToken = 0 }) {
   const [category, setCategory] = useState('all');
   const [flags, setFlags] = useState({ favourite: false, difficult: false, review: false, due: false });
   const [mode, setMode] = useState('flashcards');
@@ -75,6 +75,14 @@ export default function PracticeView({ records, onUpdate, onToast }) {
   };
 
   const exitSession = () => { setSession([]); setIndex(0); resetCard(); };
+
+  useEffect(() => {
+    if (!focusToken || !focusRecords.length) return;
+    setMode(focusRecords.length === 1 ? 'multiple' : 'flashcards');
+    setSession([...focusRecords]);
+    setIndex(0);
+    setFlipped(false); setSelectedAns(null); setMultipleFeedback(''); setWriteAnswer(''); setWriteFeedback(''); setShowRating(false);
+  }, [focusToken, focusRecords]);
 
   const current = session[index];
 

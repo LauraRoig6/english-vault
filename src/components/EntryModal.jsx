@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Volume2 } from 'lucide-react';
+import { exactDuplicate, findSimilarEntries } from '../lib/vaultUtils';
 
 
 const typeOptions = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
@@ -7,7 +8,7 @@ const typeOptions = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collo
 const emptyForm = {
   type: 'Vocabulary', word: '', meaning: '', spanish: '', example: '', my_example: '',
   register: '', level: '', variety: '', topic: '', tags: '', notes: '',
-  synonyms: '', related: '', separable: '', transitive: '', similar_expressions: '',
+  synonyms: '', related: '', pattern_structure: '', confused_with: '', usage_warning: '', separable: '', transitive: '', similar_expressions: '',
   how_common: '', offensive_warning: '', slang_tags: '',
   trick_category: '', rule: '', explanation: '', examples_list: '', exceptions: '', memory_trick: '', common_mistakes: '',
   is_favourite: false, is_difficult: false, is_known: false, needs_review: true,
@@ -26,14 +27,18 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
   const [aiLoading, setAiLoading] = useState(false);
   const [aiStatus, setAiStatus] = useState('');
 
-  // Live duplicate check as user types the word
+  // Live duplicate check. It ignores case, punctuation and extra spaces, so
+  // “Be that as it may…” and “be that as it may” count as the same entry.
   useEffect(() => {
-    const w = form.word.trim().toLowerCase();
-    if (!w) { setDuplicate(null); return; }
-    const editingId = editingRecord?.__backendId;
-    const dup = existingRecords.find((r) => r.__backendId !== editingId && (r.word || '').trim().toLowerCase() === w);
-    setDuplicate(dup || null);
+    setDuplicate(exactDuplicate(existingRecords, form.word, editingRecord?.__backendId));
   }, [form.word, existingRecords, editingRecord]);
+
+  const similarEntries = findSimilarEntries(
+    existingRecords,
+    { word: form.word, synonyms: form.synonyms, related: form.related, confused_with: form.confused_with, topic: form.topic, tags: form.tags, type: form.type },
+    editingRecord?.__backendId,
+    4
+  ).filter((r) => !duplicate || r.__backendId !== duplicate.__backendId);
 
   useEffect(() => {
     if (editingRecord) {
@@ -41,13 +46,16 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       setForm({
         ...emptyForm,
         ...editingRecord,
-        trick_category: isTrick ? editingRecord.separable || '' : '',
-        rule: isTrick ? editingRecord.transitive || '' : '',
-        explanation: isTrick ? editingRecord.how_common || '' : '',
-        examples_list: isTrick ? editingRecord.synonyms || '' : '',
-        exceptions: isTrick ? editingRecord.offensive_warning || '' : '',
-        memory_trick: isTrick ? editingRecord.related || '' : '',
+        trick_category: isTrick ? (editingRecord.trick_category || editingRecord.separable || '') : '',
+        rule: isTrick ? (editingRecord.rule || editingRecord.transitive || '') : '',
+        explanation: isTrick ? (editingRecord.explanation || editingRecord.how_common || '') : '',
+        examples_list: isTrick ? (editingRecord.examples_list || editingRecord.synonyms || '') : '',
+        exceptions: isTrick ? (editingRecord.exceptions || editingRecord.offensive_warning || '') : '',
+        memory_trick: isTrick ? (editingRecord.memory_trick || editingRecord.related || '') : '',
         common_mistakes: editingRecord.common_mistakes || (isTrick ? editingRecord.notes || '' : ''),
+        usage_warning: editingRecord.usage_warning || (!isTrick ? editingRecord.offensive_warning || '' : ''),
+        pattern_structure: editingRecord.pattern_structure || '',
+        confused_with: editingRecord.confused_with || '',
       });
     } else if (prefillRecord) {
       const allowed = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
@@ -68,10 +76,9 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
   const handleSubmit = (e, keepOpen = false) => {
     e.preventDefault();
     const editingId = editingRecord?.__backendId;
-    const normWord = form.word.trim().toLowerCase();
-    // Only block save if exact duplicate exists AND it's a new entry
-    if (!editingId && normWord) {
-      const dup = existingRecords.find((r) => (r.word || '').trim().toLowerCase() === normWord);
+    // Only block a true duplicate. Variants such as “banana peeled” remain valid.
+    if (!editingId) {
+      const dup = exactDuplicate(existingRecords, form.word);
       if (dup) { setDuplicate(dup); return; }
     }
     const isTrick = form.type === 'Grammar / Trick';
@@ -79,6 +86,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       type: form.type, word: form.word.trim(), meaning: form.meaning,
       spanish: form.spanish, example: form.example, my_example: form.my_example,
       register: form.register, level: form.level, variety: form.variety, topic: form.topic, tags: form.tags,
+      pattern_structure: form.pattern_structure, confused_with: form.confused_with, usage_warning: form.usage_warning,
       is_favourite: form.is_favourite, is_difficult: form.is_difficult, is_known: form.is_known, needs_review: form.needs_review,
       status: form.is_known ? 'Mastered' : (form.status || 'New'),
       separable: isTrick ? form.trick_category : form.separable,
@@ -86,9 +94,10 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       synonyms: isTrick ? form.examples_list : form.synonyms,
       related: isTrick ? form.memory_trick : form.related,
       how_common: isTrick ? form.explanation : form.how_common,
-      offensive_warning: isTrick ? form.exceptions : form.offensive_warning,
-      notes: isTrick ? form.common_mistakes : form.notes,
+      offensive_warning: isTrick ? form.exceptions : (form.type === 'Slang' ? (form.usage_warning || form.offensive_warning) : form.offensive_warning),
+      notes: form.notes,
       common_mistakes: form.common_mistakes,
+      trick_category: form.trick_category, rule: form.rule, explanation: form.explanation, examples_list: form.examples_list, exceptions: form.exceptions, memory_trick: form.memory_trick,
       similar_expressions: form.similar_expressions,
       slang_tags: form.slang_tags,
       review_count: form.review_count || 0,
@@ -122,11 +131,13 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       'TAGS': 'tags',
       'SYNONYMS': 'synonyms',
       'RELATED EXPRESSIONS': 'related',
+      'PATTERN / STRUCTURE': 'pattern_structure',
+      'CONFUSED WITH': 'confused_with',
       'PHRASAL: SEPARABLE?': 'separable',
       'PHRASAL: TRANSITIVITY': 'transitive',
       'RELATED PHRASAL VERBS': 'similar_expressions',
       'SLANG: HOW COMMON?': 'how_common',
-      'USAGE WARNING': 'offensive_warning',
+      'USAGE WARNING': 'usage_warning',
       'SLANG TAGS': 'slang_tags',
       'TRICK CATEGORY': 'trick_category',
       'RULE': 'rule',
@@ -261,6 +272,11 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
                   <span style={{ color: '#a67b8b' }}>Si es una variante distinta, sigue escribiendo (ej. “banana peeled”) y podrás guardar.</span>
                 </div>
               )}
+              {!duplicate && form.word.trim() && similarEntries.length > 0 && (
+                <div style={{ marginTop: '8px', padding: '10px 12px', borderRadius: '12px', background: '#fffaf0', border: '1px solid #ead9a8', color: '#806a30', fontSize: '0.82rem' }}>
+                  <strong>Related entries already in your Vault:</strong> {similarEntries.map((r) => r.word).join(', ')}. You can still save this one.
+                </div>
+              )}
               <div className="flex flex-wrap gap-2 mt-2">
                 <button className="soft-btn text-xs" type="button" onClick={() => speak('en-GB')} disabled={!form.word.trim()} title="British pronunciation"><Volume2 size={14} style={{ display: 'inline', marginRight: 4 }} />UK</button>
                 <button className="soft-btn text-xs" type="button" onClick={() => speak('en-US')} disabled={!form.word.trim()} title="American pronunciation"><Volume2 size={14} style={{ display: 'inline', marginRight: 4 }} />US</button>
@@ -305,6 +321,9 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             <div className="field md:col-span-2"><label>TAGS</label><input placeholder="Separate tags with commas" value={form.tags} onChange={(e) => set('tags', e.target.value)} /></div>
             <div className="field"><label>SYNONYMS</label><input value={form.synonyms} onChange={(e) => set('synonyms', e.target.value)} /></div>
             <div className="field"><label>RELATED EXPRESSIONS</label><input value={form.related} onChange={(e) => set('related', e.target.value)} /></div>
+            <div className="field md:col-span-2"><label>PATTERN / STRUCTURE</label><input placeholder="e.g. prevent sb from doing sth" value={form.pattern_structure} onChange={(e) => set('pattern_structure', e.target.value)} /></div>
+            <div className="field md:col-span-2"><label>CONFUSED WITH</label><input placeholder="e.g. sensible ≠ sensitive" value={form.confused_with} onChange={(e) => set('confused_with', e.target.value)} /></div>
+            {!isTrick && <div className="field md:col-span-2"><label>USAGE WARNING</label><textarea value={form.usage_warning} onChange={(e) => set('usage_warning', e.target.value)} /></div>}
 
             {isPhrasal && <>
               <div className="field"><label>PHRASAL: SEPARABLE?</label><input value={form.separable} onChange={(e) => set('separable', e.target.value)} /></div>
@@ -313,8 +332,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             </>}
             {isSlang && <>
               <div className="field"><label>SLANG: HOW COMMON?</label><input value={form.how_common} onChange={(e) => set('how_common', e.target.value)} /></div>
-              <div className="field"><label>USAGE WARNING</label><input value={form.offensive_warning} onChange={(e) => set('offensive_warning', e.target.value)} /></div>
-              <div className="field md:col-span-2"><label>SLANG TAGS</label><input value={form.slang_tags} onChange={(e) => set('slang_tags', e.target.value)} /></div>
+              <div className="field"><label>SLANG TAGS</label><input value={form.slang_tags} onChange={(e) => set('slang_tags', e.target.value)} /></div>
             </>}
             {isTrick && <>
               <div className="field"><label>TRICK CATEGORY</label><input value={form.trick_category} onChange={(e) => set('trick_category', e.target.value)} /></div>
@@ -324,6 +342,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
               <div className="field"><label>EXCEPTIONS</label><textarea value={form.exceptions} onChange={(e) => set('exceptions', e.target.value)} /></div>
               <div className="field"><label>MEMORY TRICK</label><textarea value={form.memory_trick} onChange={(e) => set('memory_trick', e.target.value)} /></div>
               <div className="field md:col-span-2"><label>COMMON MISTAKES</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} /></div>
+              <div className="field md:col-span-2"><label>NOTES</label><textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
             </>}
             {!isTrick && <>
               <div className="field md:col-span-2"><label>COMMON MISTAKES</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} /></div>

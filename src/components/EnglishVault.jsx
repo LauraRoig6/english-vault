@@ -8,9 +8,10 @@ import EntryModal from './EntryModal';
 import DetailModal from './DetailModal';
 import SurpriseDiscoveryModal from './SurpriseDiscoveryModal';
 import { Search, Dice5, Plus, House, LibraryBig, GraduationCap, Heart, LogOut, RefreshCw } from 'lucide-react';
+import { normalizeEntryText, isDue } from '../lib/vaultUtils';
 
 export default function EnglishVault({ session, onSignOut }) {
-  const { records, create, update, remove, replaceAll, loaded, syncError, reload } = useVault(session);
+  const { records, create, update, remove, loaded, syncError, reload } = useVault(session);
   const [currentView, setCurrentView] = useState('home');
   const [librarySpecificType, setLibrarySpecificType] = useState('');
   const [libraryTagFilter, setLibraryTagFilter] = useState('');
@@ -26,6 +27,8 @@ export default function EnglishVault({ session, onSignOut }) {
   const [surpriseLoading, setSurpriseLoading] = useState(false);
   const [surpriseError, setSurpriseError] = useState('');
   const [toast, setToast] = useState(null);
+  const [practiceBatch, setPracticeBatch] = useState([]);
+  const [practiceToken, setPracticeToken] = useState(0);
   const toastTimer = useRef(null);
   const undoBufferRef = useRef(null);
 
@@ -110,6 +113,33 @@ export default function EnglishVault({ session, onSignOut }) {
     setEntryModalOpen(true);
   };
 
+  const handleRelatedClick = (item) => {
+    const target = normalizeEntryText(item);
+    const found = records.find((r) => normalizeEntryText(r.word) === target);
+    if (found) {
+      setDetailRecord(found);
+      return;
+    }
+    setDetailRecord(null);
+    setEditingRecord(null);
+    setPrefillRecord({ word: item, type: 'Vocabulary' });
+    setEntryModalOpen(true);
+    showToast(`“${item}” is not in your Vault yet — add it if you want.`);
+  };
+
+  const startPracticeBatch = (batch) => {
+    const clean = (batch || []).filter(Boolean);
+    if (!clean.length) { showToast('Nothing is due right now.'); return; }
+    setPracticeBatch(clean);
+    setPracticeToken((n) => n + 1);
+    setDetailRecord(null);
+    setCurrentView('practice');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleQuizOne = (record) => startPracticeBatch([record]);
+  const handleStartDue = () => startPracticeBatch(records.filter((r) => isDue(r)));
+
   const typeToView = (type) => {
     if (!type) return null;
     const map = {
@@ -130,7 +160,7 @@ export default function EnglishVault({ session, onSignOut }) {
       update({ ...editingRecord, ...data });
       showToast('Changes saved.');
     } else {
-      const created = create(data);
+      create(data);
       const target = typeToView(data.type);
       showToast(
         `Saved to ${data.type}.`,
@@ -230,10 +260,10 @@ export default function EnglishVault({ session, onSignOut }) {
       const rows = JSON.parse(text);
       if (!Array.isArray(rows)) throw new Error();
       let added = 0;
-      const existing = new Set(records.map((r) => (r.word || '').toLowerCase().trim()));
+      const existing = new Set(records.map((r) => normalizeEntryText(r.word)));
       rows.forEach((row) => {
         if (!row.word || !row.type) return;
-        if (existing.has(row.word.toLowerCase().trim())) return;
+        if (existing.has(normalizeEntryText(row.word))) return;
         create(row);
         added++;
       });
@@ -308,6 +338,7 @@ export default function EnglishVault({ session, onSignOut }) {
             onOpenDetail={setDetailRecord}
             onDiscoverSurprise={handleDiscoverSurprise}
             surpriseLoading={surpriseLoading}
+            onStartDue={handleStartDue}
           />
         )}
 
@@ -336,7 +367,7 @@ export default function EnglishVault({ session, onSignOut }) {
         )}
 
         {currentView === 'practice' && (
-          <PracticeView records={records} onUpdate={update} onToast={showToast} />
+          <PracticeView records={records} onUpdate={update} onToast={showToast} focusRecords={practiceBatch} focusToken={practiceToken} />
         )}
       </main>
 
@@ -386,6 +417,8 @@ export default function EnglishVault({ session, onSignOut }) {
           onToggleFav={handleToggleFav}
           onUpdate={update}
           onTagClick={(value, kind) => { setDetailRecord(null); openLibraryWithFilter(value, kind); }}
+          onRelatedClick={handleRelatedClick}
+          onQuiz={handleQuizOne}
         />
       )}
 

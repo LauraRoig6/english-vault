@@ -114,7 +114,7 @@ function fuzzyMatch(record, query) {
     record.notes, record.type, record.synonyms, record.related, record.my_example,
     record.example, record.rule, record.explanation, record.level, record.register,
     record.variety, record.status, record.how_common, record.slang_tags,
-    record.similar_expressions,
+    record.similar_expressions, record.common_mistakes, record.pattern_structure, record.confused_with, record.usage_warning,
   ];
   return tokens.every((t) => fields.some((field) => textHasFuzzyToken(field, t)));
 }

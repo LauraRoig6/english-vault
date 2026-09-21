@@ -1,0 +1,65 @@
+ENGLISH VAULT — CHECKLIST DE PRUEBA
+
+Haz estas pruebas en este orden después de que Vercel ponga el deployment en Ready.
+
+1) DATOS ANTIGUOS
+- Inicia sesión.
+- Comprueba que siguen apareciendo tus entradas anteriores.
+- Abre 2 o 3 fichas antiguas.
+
+2) FORMULARIO + COMMON MISTAKES
+- Add -> escribe "nuance" (o una palabra de prueba).
+- Comprueba que existe COMMON MISTAKES como campo visible.
+- Comprueba también PATTERN / STRUCTURE, CONFUSED WITH y USAGE WARNING.
+- Pulsa Autofill with AI y verifica que rellena los campos que tengan sentido.
+- Guarda y vuelve a abrir la ficha.
+- Edita la ficha y verifica que los datos siguen ahí.
+
+3) DUPLICADOS
+- Intenta añadir exactamente una palabra que ya tengas, por ejemplo "banana".
+- Debe salir el aviso de duplicado y no dejar guardar otra igual.
+- Prueba "BANANA!" si ya tienes "banana": también debe detectarla.
+- Prueba "banana peeled": debe dejarte guardarla.
+
+4) BÚSQUEDA FUZZY + FILTROS
+- Busca una palabra con un pequeño error, por ejemplo "bananna" para "banana".
+- Debe encontrarla y resaltar la coincidencia.
+- Combina búsqueda + Level + Register + Status o tags.
+
+5) TAGS
+- Abre una ficha con tags.
+- Pulsa un tag y comprueba que te lleva a la biblioteca filtrada por ese tag.
+
+6) RELATED / SYNONYMS / CONFUSED WITH
+- Abre una ficha que tenga alguno de estos campos.
+- Pulsa una palabra relacionada.
+- Si ya existe en tu Vault, debe abrir su ficha.
+- Si no existe, debe abrir Add con esa palabra ya escrita para que decidas si guardarla.
+
+7) AI STUDY HELP
+- En una ficha normal, pulsa "3 context examples".
+- Deben aparecer Formal, Informal y Conversation.
+- Pulsa "Explícamelo en español".
+- Debe aparecer explicación + matiz + truco.
+
+8) QUIZ ME ON THIS
+- En una ficha normal, pulsa "Quiz me on this".
+- Debe llevarte a Practice y crear una práctica centrada en esa entrada.
+
+9) HOME
+- Comprueba las tarjetas Total / Learning / Almost learnt / Mastered / Added this week.
+- Comprueba Recently added.
+- Si tienes entradas pendientes, pulsa Review due now y verifica que abre una sesión solo con las pendientes.
+
+10) BACKUP
+- Library -> Export Vault.
+- Debe descargarse english-vault-backup.json.
+
+11) SINCRONIZACIÓN MÓVIL-PC
+- Añade una entrada pequeña desde un dispositivo.
+- En el otro, pulsa el botón de sincronizar.
+- Debe aparecer la entrada.
+
+12) PWA
+- En móvil, abre English Vault desde el icono de pantalla de inicio.
+- Debe abrirse como app, con nombre e icono propios.
