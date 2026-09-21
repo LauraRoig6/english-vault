@@ -118,7 +118,6 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
   const [compare3Result, setCompare3Result] = useState(null);
   const [teacherResult, setTeacherResult] = useState(null);
   const [challengeResult, setChallengeResult] = useState(null);
-  const [shareStyle, setShareStyle] = useState('lace');
   const [detailTab, setDetailTab] = useState('general');
   const shareRef = useRef(null);
 
@@ -135,8 +134,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
 
   const fields = isTrick ? [] : [
     ['Word class', record.word_class], ['Frequency', record.frequency], ['Naturalness note', record.naturalness_label],
-    ['Why this is useful', record.why_useful], ['Semantic field', record.semantic_field], ['Etymology / origin', record.etymology], ['Common collocation mistake', record.collocation_mistake], ['Native alternative', record.native_alternative], ['Useful for exams', record.useful_for_exams], ['Register ladder', record.register_ladder], ['False friend', record.false_friend],
-    ['Personal difficulty', record.personal_difficulty], ['Confidence', record.confidence], ['My mistakes', record.my_mistakes],
+    ['Why this is useful', record.why_useful], ['Semantic field', record.semantic_field], ['Common collocation mistake', record.collocation_mistake], ['Native alternative', record.native_alternative], ['Useful for exams', record.useful_for_exams], ['Register ladder', record.register_ladder],
     ['Pattern / structure', record.pattern_structure],
     ['Best for', record.best_for], ['Avoid overusing', record.avoid_overusing], ['Mini contrast', record.mini_contrast],
     ['Common mistakes', record.common_mistakes], ['Notes', record.notes],
@@ -243,14 +241,6 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
                 <p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#665784' }}>MY EXAMPLE ✦</p>
                 <p className="leading-relaxed mt-2 mb-0" style={{ fontWeight: 600 }}>{record.my_example}</p>
               </section>
-            )}
-
-            {!isTrick && (record.personal_note || record.variety_usage || record.sounds_better_as) && (
-              <div className="learning-visual-grid mt-5">
-                {record.variety_usage && <section className="uk-us-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">🇬🇧 UK ↔ US 🇺🇸</p><p>{record.variety_usage}</p></section>}
-                {record.sounds_better_as && <section className="sounds-better-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">✨ SOUNDS BETTER AS…</p><p>{record.sounds_better_as}</p></section>}
-                {record.personal_note && <section className="detail-postit"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">MY POST-IT</p><p>{record.personal_note}</p></section>}
-              </div>
             )}
 
             {isTrick ? (
@@ -395,10 +385,8 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           <div className="flex gap-2"><button className="soft-btn" type="button" onClick={() => onEdit(record)}>Edit</button><button className="soft-btn" type="button" onClick={onClose}>Close</button></div>
         </div>
 
-        <div className="share-style-picker mt-5"><span>Share card style:</span>{['lace','minimal'].map(x=><button key={x} type="button" className={shareStyle===x?'active':''} onClick={()=>setShareStyle(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div>
-
         <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
-          <div ref={shareRef} className={`share-card share-${shareStyle}`} style={{ width: '540px', padding: '48px', fontFamily: "'DM Sans', sans-serif", color: '#3d3540' }}>
+          <div ref={shareRef} className="share-card share-minimal" style={{ width: '540px', padding: '48px', fontFamily: "'DM Sans', sans-serif", color: '#3d3540' }}>
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#a46880', margin: 0 }}>English Vault ✦</p>
             <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: '3.4rem', fontWeight: 700, lineHeight: 1.02, letterSpacing: '-0.03em', margin: '10px 0 6px', color: '#3d3540' }}>{record.word}</h1>
             <p style={{ fontSize: '0.85rem', color: '#a46880', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 20px' }}>{record.type}{record.level ? ` · ${record.level}` : ''}</p>

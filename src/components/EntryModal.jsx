@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Sparkles, Volume2 } from 'lucide-react';
 import { exactDuplicate, findSimilarEntries } from '../lib/vaultUtils';
 
@@ -20,9 +20,9 @@ function copyTemplate(word = '', type = 'Vocabulary') {
     ['EASY PRONUNCIATION', ''], ['NATURAL EXAMPLE', ''], ['MY EXAMPLE', ''], ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''],
     ['SYNONYMS', ''], ['RELATED EXPRESSIONS', ''], ['ANTONYMS', ''], ['WORD FAMILY', ''], ['TYPICAL COLLOCATIONS', ''],
     ['FREQUENCY', ''], ['NATURALNESS SCORE', ''], ['NATURALNESS LABEL', ''], ['BEST FOR', ''], ['USEFUL FOR EXAMS', ''], ['NATIVE ALTERNATIVE', ''],
-    ['REGISTER LADDER', ''], ['WHY IS THIS USEFUL?', ''], ['FALSE FRIEND', ''], ['ETYMOLOGY / ORIGIN', ''], ['BRITISH VS AMERICAN USAGE', ''],
-    ['COMMON COLLOCATION MISTAKE', ''], ['SOUNDS BETTER AS', ''], ['SEMANTIC FIELD', ''], ['PERSONAL NOTE', ''], ['PERSONAL DIFFICULTY', ''], ['CONFIDENCE', ''],
-    ['MY MISTAKES', ''], ['PATTERN / STRUCTURE', ''], ['CONFUSED WITH', ''], ['MINI CONTRAST', ''], ['AVOID OVERUSING', ''], ['USAGE WARNING', ''], ['COMMON MISTAKES', ''], ['NOTES', ''],
+    ['REGISTER LADDER', ''], ['WHY IS THIS USEFUL?', ''],
+    ['COMMON COLLOCATION MISTAKE', ''], ['SEMANTIC FIELD', ''],
+    ['PATTERN / STRUCTURE', ''], ['CONFUSED WITH', ''], ['MINI CONTRAST', ''], ['AVOID OVERUSING', ''], ['USAGE WARNING', ''], ['COMMON MISTAKES', ''], ['NOTES', ''],
   ];
   if (type === 'Vocabulary') common.splice(15, 0, ['WORD CLASS', '']);
   if (type === 'Phrasal Verb') common.splice(-3, 0, ['PHRASAL: SEPARABLE?', ''], ['PHRASAL: TRANSITIVITY', ''], ['RELATED PHRASAL VERBS', '']);
@@ -44,6 +44,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
   const [quickStatus, setQuickStatus] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiStatus, setAiStatus] = useState('');
+  const wordInputRef = useRef(null);
 
   // Live duplicate check. It ignores case, punctuation and extra spaces, so
   // “Be that as it may…” and “be that as it may” count as the same entry.
@@ -95,6 +96,18 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
     } else {
       setForm(emptyForm);
     }
+  }, [editingRecord, prefillRecord]);
+
+  useEffect(() => {
+    if (editingRecord) return;
+    const timer = setTimeout(() => {
+      const el = wordInputRef.current;
+      if (!el) return;
+      el.focus();
+      const end = el.value.length;
+      try { el.setSelectionRange(end, end); } catch (e) { /* ignore */ }
+    }, 60);
+    return () => clearTimeout(timer);
   }, [editingRecord, prefillRecord]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -171,17 +184,9 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       'NATIVE ALTERNATIVE': 'native_alternative',
       'USEFUL FOR EXAMS': 'useful_for_exams',
       'REGISTER LADDER': 'register_ladder',
-      'MY MISTAKES': 'my_mistakes',
-      'PERSONAL DIFFICULTY': 'personal_difficulty',
-      'CONFIDENCE': 'confidence',
       'WHY IS THIS USEFUL?': 'why_useful',
-      'FALSE FRIEND': 'false_friend',
-      'ETYMOLOGY / ORIGIN': 'etymology',
-      'BRITISH VS AMERICAN USAGE': 'variety_usage',
       'COMMON COLLOCATION MISTAKE': 'collocation_mistake',
-      'SOUNDS BETTER AS': 'sounds_better_as',
       'SEMANTIC FIELD': 'semantic_field',
-      'PERSONAL NOTE': 'personal_note',
       'PATTERN / STRUCTURE': 'pattern_structure',
       'MINI CONTRAST': 'mini_contrast',
       'BEST FOR': 'best_for',
@@ -323,7 +328,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             </div>
             <div className="field">
               <label>WORD / EXPRESSION</label>
-              <input required value={form.word}
+              <input ref={wordInputRef} required value={form.word}
                 onChange={(e) => set('word', e.target.value.toLowerCase())}
                 style={{ borderColor: duplicate && !editingRecord ? '#d986a5' : undefined, background: duplicate && !editingRecord ? '#fff0f5' : undefined }} />
               {duplicate && !editingRecord && (
@@ -406,20 +411,8 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             {!isTrick && <div className="field"><label>USEFUL FOR EXAMS</label><input value={form.useful_for_exams} onChange={(e) => set('useful_for_exams', e.target.value)} placeholder="e.g. Essay, Speaking, CAE/C1" /></div>}
             {!isTrick && <div className="field"><label>REGISTER LADDER</label><input value={form.register_ladder} onChange={(e) => set('register_ladder', e.target.value)} placeholder="e.g. kids → children → youngsters" /></div>}
             {!isTrick && <div className="field md:col-span-2"><label>WHY IS THIS USEFUL?</label><input value={form.why_useful} onChange={(e) => set('why_useful', e.target.value)} /></div>}
-            {!isTrick && <div className="field"><label>FALSE FRIEND</label><input value={form.false_friend} onChange={(e) => set('false_friend', e.target.value)} placeholder="Leave blank unless relevant" /></div>}
-            {!isTrick && <div className="field md:col-span-2"><label>ETYMOLOGY / ORIGIN</label><textarea value={form.etymology} onChange={(e) => set('etymology', e.target.value)} placeholder="Short origin only when genuinely useful" /></div>}
-            {!isTrick && <div className="field md:col-span-2"><label>BRITISH VS AMERICAN USAGE</label><textarea value={form.variety_usage} onChange={(e) => set('variety_usage', e.target.value)} placeholder="Only real UK/US differences" /></div>}
             {!isTrick && <div className="field md:col-span-2"><label>COMMON COLLOCATION MISTAKE</label><input value={form.collocation_mistake} onChange={(e) => set('collocation_mistake', e.target.value)} placeholder="e.g. make a decision, not do a decision" /></div>}
-            {!isTrick && <div className="field md:col-span-2"><label>SOUNDS BETTER AS…</label><input value={form.sounds_better_as} onChange={(e) => set('sounds_better_as', e.target.value)} placeholder="A more natural phrasing when useful" /></div>}
             {!isTrick && <div className="field"><label>SEMANTIC FIELD</label><input value={form.semantic_field} onChange={(e) => set('semantic_field', e.target.value)} placeholder="e.g. confusion, agreement, academic writing" /></div>}
-            {!isTrick && <div className="field md:col-span-2"><label>PERSONAL NOTE · POST-IT</label><textarea value={form.personal_note} onChange={(e) => set('personal_note', e.target.value)} placeholder="Your own little note, memory or reminder" /></div>}
-            {!isTrick && <div className="field"><label>PERSONAL DIFFICULTY</label>
-              <select value={form.personal_difficulty} onChange={(e) => set('personal_difficulty', e.target.value)}><option value="">Not set</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
-            </div>}
-            {!isTrick && <div className="field"><label>CONFIDENCE</label>
-              <select value={form.confidence} onChange={(e) => set('confidence', e.target.value)}><option value="">Not set</option><option>1 · Barely know it</option><option>2</option><option>3</option><option>4</option><option>5 · I own this</option></select>
-            </div>}
-            {!isTrick && <div className="field md:col-span-2"><label>MY MISTAKES</label><textarea placeholder="Your own real mistakes with this item" value={form.my_mistakes} onChange={(e) => set('my_mistakes', e.target.value)} /></div>}
             <div className="field md:col-span-2"><label>PATTERN / STRUCTURE</label><input placeholder="e.g. prevent sb from doing sth" value={form.pattern_structure} onChange={(e) => set('pattern_structure', e.target.value)} /></div>
             <div className="field md:col-span-2"><label>CONFUSED WITH</label><input placeholder="Only genuinely confusable words/expressions" value={form.confused_with} onChange={(e) => set('confused_with', e.target.value)} /></div>
             {!isTrick && <div className="field md:col-span-2"><label>MINI CONTRAST</label><input placeholder="Brief difference from a genuinely similar item" value={form.mini_contrast} onChange={(e) => set('mini_contrast', e.target.value)} /></div>}

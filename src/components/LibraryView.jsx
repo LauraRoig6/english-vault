@@ -481,7 +481,7 @@ export default function LibraryView({
       {/* Compact filter controls */}
       <div className="library-filter-bar mb-4">
         <button className={`soft-btn filter-toggle ${filtersOpen ? 'active' : ''}`} type="button" onClick={() => setFiltersOpen((v) => !v)}><SlidersHorizontal size={15} /> Filters</button>
-        <div className="view-switch compact-switch"><span>View</span>{['cozy','compact'].map(v=><button key={v} className={displayMode===v?'active':''} onClick={()=>setDisplayMode(v)}>{v}</button>)}</div>
+        <div className="view-switch compact-switch">{['cozy','compact'].map(v=><button key={v} className={displayMode===v?'active':''} onClick={()=>setDisplayMode(v)}>{v}</button>)}</div>
       </div>
 
       {filtersOpen && <div className="card p-4 mb-6 filter-drawer">

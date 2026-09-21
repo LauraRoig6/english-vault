@@ -118,10 +118,6 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
             </button>
           ))}
         </div>
-        <div className="card p-4 mt-3" style={{ background:'#fffaf0' }}>
-          <strong>Weekly recap ✦</strong>
-          <span className="text-sm ml-2" style={{ color:'#726773' }}>You added {stats.addedWeek} {stats.addedWeek === 1 ? 'entry' : 'entries'} this week, have {stats.mastered} mastered, and a {streak}-day adding streak.</span>
-        </div>
       </section>
 
       {savedViews.length > 0 && <section className="mt-8"><div className="flex justify-between items-end mb-4"><div><p className="eyebrow">Made by you</p><h2 className="section-heading">Pinned collections</h2></div></div><div className="flex flex-wrap gap-2">{savedViews.map(v=><button key={v.name} className="soft-btn" type="button" onClick={()=>onOpenSavedView?.(v)}>📌 {v.name}</button>)}</div></section>}
@@ -198,6 +194,10 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
               </Tag>
             );
           })}
+        </div>
+        <div className="card p-4 mt-4" style={{ background:'#fffaf0' }}>
+          <strong>Weekly recap ✦</strong>
+          <span className="text-sm ml-2" style={{ color:'#726773' }}>You added {stats.addedWeek} {stats.addedWeek === 1 ? 'entry' : 'entries'} this week, have {stats.mastered} mastered, and a {streak}-day adding streak.</span>
         </div>
       </section>
     </section>
