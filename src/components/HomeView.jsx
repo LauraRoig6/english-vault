@@ -62,16 +62,6 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
       </section>
 
 
-      <section className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-7">
-        {[
-          ['Total', records.length], ['Learning', stats.learning], ['Almost learnt', stats.almost], ['Mastered', stats.mastered], ['Added this week', stats.addedWeek],
-        ].map(([label, value]) => (
-          <article key={label} className="card p-4">
-            <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>
-            <p className="m-0 mt-2" style={{ fontFamily: "'Fraunces', serif", fontSize: '1.8rem', fontWeight: 700 }}>{value}</p>
-          </article>
-        ))}
-      </section>
 
       {/* Categories */}
       <section className="mt-8">
@@ -141,6 +131,21 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
           </button>
         </article>
       </div>
+
+      <section className="mt-8">
+        <p className="eyebrow">Your progress</p>
+        <h2 className="section-heading">Stats</h2>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+          {[
+            ['Total', records.length], ['Learning', stats.learning], ['Almost learnt', stats.almost], ['Mastered', stats.mastered], ['Added this week', stats.addedWeek],
+          ].map(([label, value]) => (
+            <article key={label} className="card p-4">
+              <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>
+              <p className="m-0 mt-2" style={{ fontFamily: "'Fraunces', serif", fontSize: '1.8rem', fontWeight: 700 }}>{value}</p>
+            </article>
+          ))}
+        </div>
+      </section>
     </section>
   );
 }

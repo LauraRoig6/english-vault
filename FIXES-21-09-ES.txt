@@ -1,0 +1,37 @@
+ENGLISH VAULT — AJUSTES 21/09
+
+1. Autofill COMMON MISTAKES
+- Ahora se pide también para Vocabulary, Idiom, Expression, Collocation, Connector, Phrasal Verb y Slang.
+- Debe ser breve y realmente útil, no una comparación inventada.
+
+2. CONFUSED WITH / SYNONYMS / RELATED
+- La IA debe devolver solo palabras o expresiones cortas.
+- Sin definiciones largas, sin frases explicativas, sin dos puntos ni punto y coma.
+- Máximo 5 items.
+
+3. Similar entries
+- Ya no compara dos entradas solo por tener el mismo tipo o topic.
+- Necesita relación léxica/semántica real.
+
+4. Word / Expression en minúsculas
+- Mientras escribes se transforma a minúsculas.
+- Autofill y guardado también fuerzan minúsculas.
+
+5. Idioms
+- Siguen siendo Type = Idiom.
+- En la barra lateral están agrupados bajo “Expressions, Collocations & Idioms”.
+
+6. Search
+- La barra global busca solo en WORD / EXPRESSION.
+- Mantiene tolerancia a pequeños errores: admitedly -> admittedly.
+- Las entradas que no coinciden se ocultan.
+
+7. Stats
+- Se muestran al final de Home.
+
+PRUEBAS RECOMENDADAS
+- Autofill “to sit on the fence”: revisar Common Mistakes y Confused With.
+- Crear “Test Word” y comprobar que aparece “test word”.
+- Buscar “admitedly”: solo debería salir “admittedly” (y otras coincidencias reales de título, si las hubiera).
+- Comprobar que un Idiom aparece en Expressions, Collocations & Idioms.
+- Re-autofill de una entrada antigua con Confused With demasiado largo para limpiarla.

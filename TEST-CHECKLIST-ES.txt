@@ -63,3 +63,13 @@ Haz estas pruebas en este orden después de que Vercel ponga el deployment en Re
 12) PWA
 - En móvil, abre English Vault desde el icono de pantalla de inicio.
 - Debe abrirse como app, con nombre e icono propios.
+
+
+AJUSTES 21/09
+- Autofill: COMMON MISTAKES debe rellenarse con 1-2 errores/trampas útiles también en idioms, expressions, vocabulary, etc.
+- Listas IA: SYNONYMS / RELATED / CONFUSED WITH / RELATED PHRASAL VERBS deben ser solo items cortos, sin explicaciones.
+- Similar entries: no debe comparar entradas solo por compartir tipo o topic.
+- Word / Expression: todo se escribe/guarda en minúscula.
+- Idioms: aparecen dentro de Expressions, Collocations & Idioms en la barra lateral.
+- Search global: debe filtrar SOLO por Word / Expression (con tolerancia a errores) y ocultar el resto.
+- Stats: al final de Home.

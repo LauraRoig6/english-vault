@@ -64,7 +64,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
         ...emptyForm,
         ...safe,
         type: allowed.includes(prefillRecord.type) ? prefillRecord.type : 'Vocabulary',
-        word: prefillRecord.word || '',
+        word: String(prefillRecord.word || '').toLowerCase(),
       });
     } else {
       setForm(emptyForm);
@@ -171,6 +171,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
     
     setForm((f) => {
       console.log('Previous form state:', f);
+      if (updates.word) updates.word = String(updates.word).toLowerCase();
       const newForm = { ...f, ...updates };
       console.log('New form state:', newForm);
       return newForm;
@@ -220,7 +221,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       allowedKeys.forEach((k) => {
         if (data[k] !== undefined && typeof data[k] !== 'boolean') updates[k] = data[k];
       });
-      updates.word = data.word || word;
+      updates.word = String(data.word || word).toLowerCase();
       setForm((f) => ({ ...f, ...updates, my_example: f.my_example || '' }));
       setAiStatus('Done ✨ Review it before saving.');
     } catch (err) {
@@ -264,7 +265,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             <div className="field">
               <label>WORD / EXPRESSION</label>
               <input required value={form.word}
-                onChange={(e) => set('word', e.target.value)}
+                onChange={(e) => set('word', e.target.value.toLowerCase())}
                 style={{ borderColor: duplicate && !editingRecord ? '#d986a5' : undefined, background: duplicate && !editingRecord ? '#fff0f5' : undefined }} />
               {duplicate && !editingRecord && (
                 <div style={{ marginTop: '8px', padding: '10px 12px', borderRadius: '12px', background: '#fff0f5', border: '1px solid #eab7c8', color: '#9d4f6e', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>

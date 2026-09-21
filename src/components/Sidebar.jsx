@@ -6,7 +6,7 @@ const navItems = [
   { id: 'vocabulary', label: 'Vocabulary', icon: LibraryBig },
   { id: 'slang', label: 'Slang', icon: MessageCircle },
   { id: 'phrasal', label: 'Phrasal Verbs', icon: Link2 },
-  { id: 'expressions', label: 'Expressions & Collocations', icon: Sparkles },
+  { id: 'expressions', label: 'Expressions, Collocations & Idioms', icon: Sparkles },
   { id: 'connectors', label: 'Connectors / Linkers', icon: GitBranch },
   { id: 'tricks', label: 'Tricks', icon: Brain },
   { id: 'practice', label: 'Practice', icon: GraduationCap },

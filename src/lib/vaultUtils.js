@@ -32,9 +32,12 @@ export function relatedScore(a, b) {
   if (!aw || !bw || aw === bw) return 0;
 
   let score = 0;
+  let strongMatch = false;
   const at = tokenSet(aw);
   const bt = tokenSet(bw);
-  for (const t of at) if (bt.has(t)) score += 3;
+  for (const t of at) {
+    if (bt.has(t)) { score += 4; strongMatch = true; }
+  }
 
   const aRelated = new Set([
     ...splitList(a?.synonyms), ...splitList(a?.related), ...splitList(a?.confused_with), ...splitList(a?.similar_expressions),
@@ -43,21 +46,26 @@ export function relatedScore(a, b) {
     ...splitList(b?.synonyms), ...splitList(b?.related), ...splitList(b?.confused_with), ...splitList(b?.similar_expressions),
   ].map(normalizeEntryText));
 
-  if (aRelated.has(bw) || bRelated.has(aw)) score += 8;
-  if (a.topic && b.topic && normalizeEntryText(a.topic) === normalizeEntryText(b.topic)) score += 2;
-  if (a.type && b.type && a.type === b.type) score += 1;
+  if (aRelated.has(bw) || bRelated.has(aw)) { score += 10; strongMatch = true; }
+  for (const item of aRelated) {
+    if (item && bRelated.has(item)) { score += 4; strongMatch = true; }
+  }
 
-  const aTags = new Set(splitList(a?.tags).map(normalizeEntryText));
-  const bTags = new Set(splitList(b?.tags).map(normalizeEntryText));
-  for (const t of aTags) if (bTags.has(t)) score += 1;
-  return score;
+  // Generic metadata such as sharing the same type/topic must never be enough
+  // to call two entries similar. Tags only boost an already meaningful match.
+  if (strongMatch) {
+    const aTags = new Set(splitList(a?.tags).map(normalizeEntryText));
+    const bTags = new Set(splitList(b?.tags).map(normalizeEntryText));
+    for (const t of aTags) if (bTags.has(t)) score += 1;
+  }
+  return strongMatch ? score : 0;
 }
 
 export function findSimilarEntries(records = [], draft = {}, excludeId = null, limit = 4) {
   return records
     .filter((r) => r.__backendId !== excludeId)
     .map((r) => ({ record: r, score: relatedScore(draft, r) }))
-    .filter((x) => x.score >= 3)
+    .filter((x) => x.score >= 4)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((x) => x.record);

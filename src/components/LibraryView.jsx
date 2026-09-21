@@ -29,7 +29,7 @@ const headings = {
   vocabulary: ['Vocabulary', 'Words worth keeping close.'],
   slang: ['Slang', 'Natural, modern and colloquial English.'],
   phrasal: ['Phrasal Verbs', 'Explore meaning, usage and related verbs.'],
-  expressions: ['Expressions & Collocations', 'The combinations that make English sound natural.'],
+  expressions: ['Expressions, Collocations & Idioms', 'Natural phrases, fixed combinations and idiomatic language.'],
   connectors: ['Connectors / Linkers', 'Words and phrases that connect ideas and organise discourse.'],
   tricks: ['Tricks', 'Your personal grammar and usage handbook.'],
   favourites: ['Favourites', 'Your saved essentials.'],
@@ -83,6 +83,16 @@ function textHasFuzzyToken(text, token) {
   if (value.includes(token.toLowerCase())) return true;
   const words = value.match(/[a-zà-ÿ'-]+/gi) || [];
   return words.some((w) => fuzzyTokenMatch(token, w));
+}
+
+
+function fuzzyWordMatch(word, query) {
+  if (!query) return true;
+  const qTokens = String(query).trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!qTokens.length) return true;
+  const wordText = String(word || '').toLowerCase();
+  const wordTokens = wordText.match(/[a-zà-ÿ'-]+/gi) || [];
+  return qTokens.every((q) => wordText.includes(q) || wordTokens.some((w) => fuzzyTokenMatch(q, w)));
 }
 
 // Highlight exact hits and close fuzzy word hits.
@@ -260,7 +270,7 @@ export default function LibraryView({
       if (key === 'status') r = r.filter((x) => (x.status || 'New') === value);
       else r = r.filter((x) => (x[key] || '') === value);
     }
-    if (search) r = r.filter((x) => fuzzyMatch(x, search));
+    if (search) r = r.filter((x) => fuzzyWordMatch(x.word, search));
 
     Object.entries(filters).forEach(([k, v]) => {
       if (!v) return;

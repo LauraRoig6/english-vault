@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
   const typeHint = typeof req.body?.type === 'string' ? req.body.type.trim() : '';
   if (!rawWord || rawWord.length > 160) return res.status(400).json({ error: 'Enter a word, expression or grammar point first.' });
 
-  const instructions = `You fill entries for a personal English-learning app called English Vault. Use natural, accurate modern English and useful Spanish translations. Prefer British English spelling when there is no reason to prefer American English. Infer the most useful category from these exact options: ${ALLOWED_TYPES.join(', ')}. The user's current type selection is only a hint and may be wrong. Use concise but pedagogically useful content. For fields irrelevant to the chosen category, return an empty string. Populate pattern_structure when there is a useful grammatical pattern, complement or construction. Populate confused_with only when there is a genuinely useful commonly confused item. Populate usage_warning whenever register, grammar, connotation, countability, collocation or context could cause a learner mistake. Never use em dashes as placeholders. For Grammar / Trick, fully populate trick_category, rule, explanation, examples_list, exceptions, memory_trick and common_mistakes. For Phrasal Verb, populate separable, transitive and similar_expressions. For Slang, populate how_common, usage_warning and slang_tags. Keep offensive_warning empty unless it is needed for backward compatibility. For Connector / Linker, make the function in discourse clear. Do not invent a MY EXAMPLE for the learner: my_example must be an empty string.`;
+  const instructions = `You fill entries for a personal English-learning app called English Vault. Use natural, accurate modern English and useful Spanish translations. Prefer British English spelling when there is no reason to prefer American English. Infer the most useful category from these exact options: ${ALLOWED_TYPES.join(', ')}. The user's current type selection is only a hint and may be wrong. Use concise but pedagogically useful content. For fields irrelevant to the chosen category, return an empty string. Always return word in lower case, preserving normal punctuation and apostrophes. Populate pattern_structure when there is a useful grammatical pattern, complement or construction. Populate confused_with ONLY when there is a genuinely confusable word or expression a learner could mix up with the target; do not use merely related expressions. If there is no genuinely confusable item, return an empty string. SYNONYMS, RELATED EXPRESSIONS, CONFUSED WITH and RELATED PHRASAL VERBS must contain ONLY short standalone lexical items separated by commas: no definitions, no explanations, no colons, no semicolons, no full sentences. Use at most 5 items in each list. Populate usage_warning whenever register, grammar, connotation, countability, collocation or context could cause a learner mistake. COMMON MISTAKES should normally be non-empty for every ordinary lexical entry too, not only Grammar / Trick: give 1-2 concise, specific learner mistakes or usage traps. If there is no famous textbook error, give one genuinely relevant avoid-this trap about form, meaning, register, collocation or literal translation; never invent an unrelated comparison just to fill the field. Never use em dashes as placeholders. For Grammar / Trick, fully populate trick_category, rule, explanation, examples_list, exceptions, memory_trick and common_mistakes. For Phrasal Verb, populate separable, transitive and similar_expressions. For Slang, populate how_common, usage_warning and slang_tags. Keep offensive_warning empty unless it is needed for backward compatibility. For Connector / Linker, make the function in discourse clear. Do not invent a MY EXAMPLE for the learner: my_example must be an empty string.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/responses', {
@@ -76,7 +76,20 @@ module.exports = async function handler(req, res) {
     if (!output) return res.status(502).json({ error: 'The AI returned no usable content.' });
 
     const entry = JSON.parse(output);
-    entry.word = entry.word || rawWord;
+    entry.word = String(entry.word || rawWord).trim().toLowerCase();
+    const cleanLexicalList = (value) => String(value || '')
+      .split(/[,;\n]+/)
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .map((x) => x.includes(':') ? x.split(':')[0].trim() : x)
+      .filter((x) => x && !/^(or|and|because|which|this|that)\b/i.test(x))
+      .filter((x) => x.split(/\s+/).length <= 8)
+      .slice(0, 5)
+      .join(', ');
+    entry.synonyms = cleanLexicalList(entry.synonyms);
+    entry.related = cleanLexicalList(entry.related);
+    entry.confused_with = cleanLexicalList(entry.confused_with);
+    entry.similar_expressions = cleanLexicalList(entry.similar_expressions);
     return res.status(200).json(entry);
   } catch (err) {
     console.error('Autofill exception', err);
