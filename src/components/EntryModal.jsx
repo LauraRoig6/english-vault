@@ -47,7 +47,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
         examples_list: isTrick ? editingRecord.synonyms || '' : '',
         exceptions: isTrick ? editingRecord.offensive_warning || '' : '',
         memory_trick: isTrick ? editingRecord.related || '' : '',
-        common_mistakes: isTrick ? editingRecord.notes || '' : '',
+        common_mistakes: editingRecord.common_mistakes || (isTrick ? editingRecord.notes || '' : ''),
       });
     } else if (prefillRecord) {
       const allowed = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
@@ -88,6 +88,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       how_common: isTrick ? form.explanation : form.how_common,
       offensive_warning: isTrick ? form.exceptions : form.offensive_warning,
       notes: isTrick ? form.common_mistakes : form.notes,
+      common_mistakes: form.common_mistakes,
       similar_expressions: form.similar_expressions,
       slang_tags: form.slang_tags,
       review_count: form.review_count || 0,
@@ -324,7 +325,10 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
               <div className="field"><label>MEMORY TRICK</label><textarea value={form.memory_trick} onChange={(e) => set('memory_trick', e.target.value)} /></div>
               <div className="field md:col-span-2"><label>COMMON MISTAKES</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} /></div>
             </>}
-            {!isTrick && <div className="field md:col-span-2"><label>NOTES</label><textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>}
+            {!isTrick && <>
+              <div className="field md:col-span-2"><label>COMMON MISTAKES</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} /></div>
+              <div className="field md:col-span-2"><label>NOTES</label><textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
+            </>}
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-6">
