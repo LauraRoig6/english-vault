@@ -45,6 +45,7 @@ function RichText({ text }) {
     return parts.map((part, i) => part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2,-2)}</strong> : part.startsWith('*') && part.endsWith('*') ? <em key={i}>{part.slice(1,-1)}</em> : <React.Fragment key={i}>{part}</React.Fragment>);
   };
   const lines = String(text).split(/\n+/).filter(Boolean);
+  const lines = String(text).split(/\n+/).filter(Boolean);
   return <div className="rich-text">{lines.map((line,i)=>/^[-•]\s/.test(line) ? <div key={i} className="rich-bullet">• {renderInline(line.replace(/^[-•]\s*/,''))}</div> : <p key={i}>{renderInline(line)}</p>)}</div>;
 }
 

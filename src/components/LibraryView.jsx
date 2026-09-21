@@ -320,6 +320,9 @@ export default function LibraryView({
     setTagFilter(v.tagFilter || '');
     setTopicFilter(v.topicFilter || '');
     onSearchChange?.(v.search || '');
+    // The setters/callback are intentionally omitted: this effect should only run
+    // when a saved view is selected, not whenever parent callback identities change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extraFilter]);
 
   const [title, description] = headings[currentView] || ['Library', ''];
