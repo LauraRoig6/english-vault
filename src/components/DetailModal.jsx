@@ -54,7 +54,7 @@ function RelatedPills({ label, value, onRelatedClick, allRecords = [] }) {
   const existing = new Set(allRecords.map((r) => normalizeEntryText(r.word)));
   return (
     <section className="rounded-2xl p-4" style={{ background: label === 'CONFUSED WITH' ? '#fff7e8' : label === 'SYNONYMS' ? '#f4efff' : '#fff7fa', border: '1px solid #eadde3' }}>
-      <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>
+      <p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#9a7180' }}>{label}</p>
       <div className="flex flex-wrap gap-2 mt-3">
         {items.map((item) => {
           const inVault = existing.has(normalizeEntryText(item));
@@ -69,24 +69,26 @@ function RelatedPills({ label, value, onRelatedClick, allRecords = [] }) {
   );
 }
 
-function LexicalCloud({ label, value, onClick, tone = "pink" }) {
+function LexicalCloud({ label, value, onClick, allRecords = [], tone = "pink" }) {
   const items = splitList(value);
   if (!items.length) return null;
+  const existing = new Set(allRecords.map((r) => normalizeEntryText(r.word)));
   return (
     <section className={`lexical-cloud cloud-${tone}`}>
-      <p className="text-xs font-bold tracking-widest m-0">{label}</p>
-      <div className="lexical-cloud-items">{items.map((item,i)=><button key={item} type="button" onClick={()=>onClick?.(item)} style={{fontSize:`${.72 + Math.min(i,3)*.06}rem`}}>{item}</button>)}</div>
+      <p className="text-xs font-bold tracking-widest m-0 detail-block-title">{label}</p>
+      <div className="lexical-cloud-items">{items.map((item,i)=>{ const inVault = existing.has(normalizeEntryText(item)); return <button key={item} type="button" className={inVault ? 'in-vault' : 'not-in-vault'} onClick={()=>onClick?.(item)} style={{fontSize:`${.76 + Math.min(i,3)*.07}rem`}}>{item}</button>; })}</div>
     </section>
   );
 }
 
-function WordFamilyGraph({ value, current, onClick }) {
+function WordFamilyGraph({ value, current, onClick, allRecords = [] }) {
   const items = splitList(value);
   if (!items.length) return null;
-  return <section className="word-family-graph"><p className="text-xs font-bold tracking-widest m-0">WORD FAMILY</p><div className="word-family-map"><span className="family-center">{current}</span>{items.map((x,i)=><button key={x} type="button" className={`family-node n${i%5}`} onClick={()=>onClick?.(x)}>{x}</button>)}</div></section>;
+  const existing = new Set(allRecords.map((r) => normalizeEntryText(r.word)));
+  return <section className="word-family-graph"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">WORD FAMILY</p><div className="word-family-map"><span className="family-center">{current}</span>{items.map((x,i)=>{ const inVault = existing.has(normalizeEntryText(x)); return <button key={x} type="button" className={`family-node n${i%5} ${inVault ? 'in-vault' : 'not-in-vault'}`} onClick={()=>onClick?.(x)}>{x}</button>; })}</div></section>;
 }
 
-export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz, allRecords = [], onStatusChange }) {
+export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz, allRecords = [], onStatusChange, onUpdate }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [contextExamples, setContextExamples] = useState(null);
   const [contextTab, setContextTab] = useState(0);
@@ -105,6 +107,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
   const [teacherResult, setTeacherResult] = useState(null);
   const [challengeResult, setChallengeResult] = useState(null);
   const [shareStyle, setShareStyle] = useState('lace');
+  const [detailTab, setDetailTab] = useState('general');
   const shareRef = useRef(null);
 
   if (!record) return null;
@@ -197,6 +200,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
             const clickable = onTagClick && ['tag', 'topic', 'level', 'register', 'variety', 'type'].includes(k);
             return <span key={i} onClick={clickable ? () => onTagClick(v, k) : undefined} style={clickable ? { cursor: 'pointer', display: 'inline-block' } : {}} title={clickable ? `Filter by ${v}` : undefined}><Chip kind={k}>{v}</Chip></span>;
           })}
+          {!isTrick && <button type="button" className={`chip confuse-toggle ${record.i_confuse_this ? 'active' : ''}`} onClick={() => onUpdate?.(record)} title="You decide whether this belongs in Words I confuse">🧩 {record.i_confuse_this ? 'I confuse this ✓' : 'I confuse this'}</button>}
           <div className="status-picker">
             <button type="button" className="chip chip-status status-picker-button" onClick={() => setStatusOpen((v) => !v)} title="Change learning status">
               {record.status || 'New'} ▾
@@ -213,25 +217,85 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           </div>
         </div>
 
-        {usageWarning && (
-          <section className="mt-5 rounded-2xl p-4" style={{ background: '#fff7df', border: '1px solid #ead59a' }}>
-            <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#846821' }}><AlertTriangle size={14} style={{ display: 'inline', marginRight: 6 }} />USAGE WARNING</p>
-            <p className="leading-relaxed mt-2 mb-0">{usageWarning}</p>
-          </section>
-        )}
-
-        {!isTrick && record.naturalness_score && (
-          <section className="naturalness-card mt-5">
-            <div className="naturalness-head"><div><p className="eyebrow m-0">Naturalness</p><strong>{record.naturalness_label || ({1:'Unnatural / awkward',2:'A bit forced',3:'Neutral',4:'Natural',5:'Very natural'})[record.naturalness_score]}</strong></div><span className="naturalness-score">{record.naturalness_score}/5</span></div>
-            <div className="naturalness-thermometer" aria-label={`Naturalness ${record.naturalness_score} out of 5`}>
-              {[1,2,3,4,5].map((n) => <span key={n} className={`naturalness-step n${n} ${n <= Number(record.naturalness_score) ? 'filled' : ''}`} />)}
-              <span className="naturalness-marker" style={{ left: `calc(${((Number(record.naturalness_score)-1)/4)*100}% - 7px)` }} />
-            </div>
-            <div className="naturalness-labels"><span>awkward</span><span>very natural</span></div>
-          </section>
-        )}
-
         {!isTrick && (
+          <div className="detail-tabs mt-5" role="tablist" aria-label="Entry sections">
+            <button type="button" className={detailTab === 'general' ? 'active' : ''} onClick={() => setDetailTab('general')}>General</button>
+            <button type="button" className={detailTab === 'ai' ? 'active' : ''} onClick={() => setDetailTab('ai')}>AI Study Help</button>
+          </div>
+        )}
+
+        {(isTrick || detailTab === 'general') && (
+          <>
+            {!isTrick && (record.meaning || record.spanish || record.example) && (
+              <div className="grid md:grid-cols-3 gap-4 mt-5">
+                {record.meaning && <section className="rounded-2xl p-4" style={{ background: '#fff0f6', border: '1px solid #f0cad9' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#a05c78' }}>💡 MEANING</p><p className="leading-relaxed mt-2 mb-0">{record.meaning}</p></section>}
+                {record.spanish && <section className="rounded-2xl p-4" style={{ background: '#f2efff', border: '1px solid #dcd4f4' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#6d5d91' }}>🇪🇸 SPANISH</p><p className="leading-relaxed mt-2 mb-0">{record.spanish}</p></section>}
+                {record.example && <section className="rounded-2xl p-4" style={{ background: '#fff8dd', border: '1px solid #ecdda7' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#8a7027' }}>✨ NATURAL EXAMPLE</p><p className="leading-relaxed mt-2 mb-0" style={{ fontStyle: 'italic' }}>{record.example}</p></section>}
+              </div>
+            )}
+
+            {record.my_example && !isTrick && (
+              <section className="mt-5 rounded-2xl p-4" style={{ background: '#eeeafb', border: '1px solid #d9d0ef' }}>
+                <p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#665784' }}>MY EXAMPLE ✦</p>
+                <p className="leading-relaxed mt-2 mb-0" style={{ fontWeight: 600 }}>{record.my_example}</p>
+              </section>
+            )}
+
+            {!isTrick && (record.personal_note || record.variety_usage || record.sounds_better_as) && (
+              <div className="learning-visual-grid mt-5">
+                {record.variety_usage && <section className="uk-us-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">🇬🇧 UK ↔ US 🇺🇸</p><p>{record.variety_usage}</p></section>}
+                {record.sounds_better_as && <section className="sounds-better-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">✨ SOUNDS BETTER AS…</p><p>{record.sounds_better_as}</p></section>}
+                {record.personal_note && <section className="detail-postit"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">MY POST-IT</p><p>{record.personal_note}</p></section>}
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-2 gap-5 mt-7">
+              {fields.filter(([, v]) => v).map(([label, value], index) => {
+                const tones = [
+                  ['#fff7fa','#efd3df','#9a7180'], ['#f7f4ff','#ded6f1','#6e6288'],
+                  ['#fffaf0','#eadcaf','#806a30'], ['#f2faf5','#d4e8da','#52705c'],
+                ];
+                const [bg,border,labelColor] = tones[index % tones.length];
+                return <section key={label} className="rounded-2xl p-4" style={{ background: bg, border: `1px solid ${border}` }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: labelColor }}>{label.toUpperCase()}</p><p className="leading-relaxed mt-2 whitespace-pre-line m-0">{value}</p></section>;
+              })}
+            </div>
+
+            {usageWarning && (
+              <section className="mt-6 rounded-2xl p-4" style={{ background: '#fff7df', border: '1px solid #ead59a' }}>
+                <p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#846821' }}><AlertTriangle size={14} style={{ display: 'inline', marginRight: 6 }} />USAGE WARNING</p>
+                <p className="leading-relaxed mt-2 mb-0">{usageWarning}</p>
+              </section>
+            )}
+
+            {!isTrick && (
+              <section className="lexical-relations mt-6">
+                <div className="lexical-relations-heading"><span>Lexical connections</span><small>Blue = already in your Vault</small></div>
+                <div className="grid md:grid-cols-2 gap-4 mt-3">
+                  <RelatedPills label="SYNONYMS" value={record.synonyms} onRelatedClick={onRelatedClick} allRecords={allRecords} />
+                  <RelatedPills label="RELATED EXPRESSIONS" value={record.related} onRelatedClick={onRelatedClick} allRecords={allRecords} />
+                  <RelatedPills label="ANTONYMS" value={record.antonyms} onRelatedClick={onRelatedClick} allRecords={allRecords} />
+                  <RelatedPills label="CONFUSED WITH" value={record.confused_with} onRelatedClick={onRelatedClick} allRecords={allRecords} />
+                  <RelatedPills label="RELATED PHRASAL VERBS" value={record.similar_expressions} onRelatedClick={onRelatedClick} allRecords={allRecords} />
+                  <WordFamilyGraph value={record.word_family} current={record.word} onClick={onRelatedClick} allRecords={allRecords} />
+                  <LexicalCloud label="COLLOCATION CLOUD" value={record.typical_collocations} onClick={onRelatedClick} allRecords={allRecords} tone="sage" />
+                </div>
+              </section>
+            )}
+
+            {!isTrick && record.naturalness_score && (
+              <section className="naturalness-card mt-6">
+                <div className="naturalness-head"><div><p className="eyebrow m-0 detail-block-title">Naturalness</p><strong>{record.naturalness_label || ({1:'Unnatural / awkward',2:'A bit forced',3:'Neutral',4:'Natural',5:'Very natural'})[record.naturalness_score]}</strong></div><span className="naturalness-score">{record.naturalness_score}/5</span></div>
+                <div className="naturalness-thermometer" aria-label={`Naturalness ${record.naturalness_score} out of 5`}>
+                  {[1,2,3,4,5].map((n) => <span key={n} className={`naturalness-step n${n} ${n <= Number(record.naturalness_score) ? 'filled' : ''}`} />)}
+                  <span className="naturalness-marker" style={{ left: `calc(${((Number(record.naturalness_score)-1)/4)*100}% - 7px)` }} />
+                </div>
+                <div className="naturalness-labels"><span>awkward</span><span>very natural</span></div>
+              </section>
+            )}
+          </>
+        )}
+
+        {!isTrick && detailTab === 'ai' && (
           <section className="mt-5 rounded-2xl p-4" style={{ background: '#fffafc', border: '1px solid #efd3df' }}>
             <p className="eyebrow" style={{ marginBottom: '8px' }}>AI study help</p>
             <div className="flex flex-wrap gap-2">
@@ -304,47 +368,6 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
             </div>
           </section>
         )}
-
-        {!isTrick && (record.meaning || record.spanish || record.example) && (
-          <div className="grid md:grid-cols-3 gap-4 mt-5">
-            {record.meaning && <section className="rounded-2xl p-4" style={{ background: '#fff0f6', border: '1px solid #f0cad9' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#a05c78' }}>💡 MEANING</p><p className="leading-relaxed mt-2 mb-0">{record.meaning}</p></section>}
-            {record.spanish && <section className="rounded-2xl p-4" style={{ background: '#f2efff', border: '1px solid #dcd4f4' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#6d5d91' }}>🇪🇸 SPANISH</p><p className="leading-relaxed mt-2 mb-0">{record.spanish}</p></section>}
-            {record.example && <section className="rounded-2xl p-4" style={{ background: '#fff8dd', border: '1px solid #ecdda7' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#8a7027' }}>✨ NATURAL EXAMPLE</p><p className="leading-relaxed mt-2 mb-0" style={{ fontStyle: 'italic' }}>{record.example}</p></section>}
-          </div>
-        )}
-
-        {record.my_example && !isTrick && (
-          <section className="mt-5 rounded-2xl p-4" style={{ background: '#eeeafb', border: '1px solid #d9d0ef' }}>
-            <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#665784' }}>MY EXAMPLE ✦</p>
-            <p className="leading-relaxed mt-2 mb-0" style={{ fontWeight: 600 }}>{record.my_example}</p>
-          </section>
-        )}
-
-        {!isTrick && (record.word_family || record.typical_collocations || record.personal_note || record.variety_usage || record.sounds_better_as) && (
-          <div className="learning-visual-grid mt-5">
-            <WordFamilyGraph value={record.word_family} current={record.word} onClick={onRelatedClick} />
-            <LexicalCloud label="COLLOCATION CLOUD" value={record.typical_collocations} onClick={onRelatedClick} tone="sage" />
-            {record.variety_usage && <section className="uk-us-card"><p className="text-xs font-bold tracking-widest m-0">🇬🇧 UK ↔ US 🇺🇸</p><p>{record.variety_usage}</p></section>}
-            {record.sounds_better_as && <section className="sounds-better-card"><p className="text-xs font-bold tracking-widest m-0">✨ SOUNDS BETTER AS…</p><p>{record.sounds_better_as}</p></section>}
-            {record.personal_note && <section className="detail-postit"><p className="text-xs font-bold tracking-widest m-0">MY POST-IT</p><p>{record.personal_note}</p></section>}
-          </div>
-        )}
-
-        <div className="grid md:grid-cols-2 gap-5 mt-7">
-          {fields.filter(([, v]) => v).map(([label, value], index) => {
-            const tones = [
-              ['#fff7fa','#efd3df','#9a7180'], ['#f7f4ff','#ded6f1','#6e6288'],
-              ['#fffaf0','#eadcaf','#806a30'], ['#f2faf5','#d4e8da','#52705c'],
-            ];
-            const [bg,border,labelColor] = tones[index % tones.length];
-            return <section key={label} className="rounded-2xl p-4" style={{ background: bg, border: `1px solid ${border}` }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: labelColor }}>{label.toUpperCase()}</p><p className="leading-relaxed mt-2 whitespace-pre-line m-0">{value}</p></section>;
-          })}
-          {!isTrick && <RelatedPills label="SYNONYMS" value={record.synonyms} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
-          {!isTrick && <RelatedPills label="RELATED EXPRESSIONS" value={record.related} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
-          {!isTrick && <RelatedPills label="ANTONYMS" value={record.antonyms} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
-          {!isTrick && <RelatedPills label="CONFUSED WITH" value={record.confused_with} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
-          {!isTrick && <RelatedPills label="RELATED PHRASAL VERBS" value={record.similar_expressions} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
-        </div>
 
         <div className="mt-7 pt-5 border-t flex flex-wrap justify-between gap-3" style={{ borderColor: '#e8d8df' }}>
           <button className="text-sm font-bold px-2 bg-transparent border-0" style={{ color: '#b44c70', cursor: 'pointer' }} type="button" onClick={() => { if (confirmDelete) onDelete(record); else setConfirmDelete(true); }}>{confirmDelete ? 'Confirm delete' : 'Delete entry'}</button>

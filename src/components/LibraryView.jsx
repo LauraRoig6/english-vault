@@ -172,9 +172,8 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
 
   const handleDeleteClick = (e) => {
     e.stopPropagation();
-    if (confirmDel) {
-      onDelete(record);
-    } else {
+    if (confirmDel) onDelete(record);
+    else {
       setConfirmDel(true);
       setTimeout(() => setConfirmDel(false), 3000);
     }
@@ -201,33 +200,50 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
       }}
     >
       <div style={{ position: 'absolute', right: '15px', top: '15px', display: 'flex', gap: '6px' }}>
-        <button
-          className={`favourite-toggle ${record.is_favourite ? 'is-fav' : ''}`}
-          type="button"
-          aria-label="Toggle favourite"
-          style={{ position: 'static' }}
-          onClick={(e) => { e.stopPropagation(); onToggleFav(record); }}
-        >
+        <button className={`favourite-toggle ${record.is_favourite ? 'is-fav' : ''}`} type="button" aria-label="Toggle favourite" style={{ position: 'static' }} onClick={(e) => { e.stopPropagation(); onToggleFav(record); }}>
           <Heart size={16} fill={record.is_favourite ? 'currentColor' : 'none'} />
         </button>
-        <button
-          type="button"
-          aria-label={confirmDel ? 'Confirm delete' : 'Delete entry'}
-          title={confirmDel ? 'Click again to confirm' : 'Delete entry'}
-          onClick={handleDeleteClick}
-          style={{
-            width: '33px', height: '33px', border: 0,
-            background: confirmDel ? '#f8dce5' : '#fffdfc',
-            borderRadius: '10px',
-            color: confirmDel ? '#994865' : '#b8a3ad',
-            display: 'grid', placeItems: 'center',
-            transition: 'background 0.18s, color 0.18s',
-            cursor: 'pointer',
-          }}
-        >
+        <button type="button" aria-label={confirmDel ? 'Confirm delete' : 'Delete entry'} title={confirmDel ? 'Click again to confirm' : 'Delete entry'} onClick={handleDeleteClick}
+          style={{ width: '33px', height: '33px', border: 0, background: confirmDel ? '#f8dce5' : '#fffdfc', borderRadius: '10px', color: confirmDel ? '#994865' : '#b8a3ad', display: 'grid', placeItems: 'center', transition: 'background 0.18s, color 0.18s', cursor: 'pointer' }}>
           <Trash2 size={15} />
         </button>
       </div>
+
+      <div className="entry-title-row">
+        <h3 className="entry-word"><Highlight text={record.word} query={query} /></h3>
+        <div className="entry-audio-row">
+          <button type="button" onClick={(e) => { e.stopPropagation(); speakWord(record.word, 'en-GB'); }} title="British pronunciation"><Volume2 size={12} /> UK</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); speakWord(record.word, 'en-US'); }} title="American pronunciation"><Volume2 size={12} /> US</button>
+        </div>
+      </div>
+
+      {record.pronunciation_easy && <div className="entry-pronunciation">🗣 {record.pronunciation_easy}</div>}
+      {record.spanish && <div className="entry-spanish">🇪🇸 <strong>{record.spanish}</strong></div>}
+
+      {!isTrick && (
+        <div className="entry-definition-block">
+          <span className="entry-inline-label">Meaning</span>
+          <p className="entry-meaning text-sm leading-relaxed m-0"><Highlight text={record.meaning || record.explanation || 'No meaning added yet.'} query={query} /></p>
+        </div>
+      )}
+      {!isTrick && record.example && (
+        <div className="entry-example-block"><span className="entry-inline-label">Example</span><p>{record.example}</p></div>
+      )}
+      {isTrick && (
+        <div className="trick-preview">
+          {[['RULE', record.transitive], ['QUICK NOTES', record.how_common], ['EXAMPLES', record.synonyms]].filter(([, v]) => v).map(([label, val]) => (
+            <section key={label} className="trick-preview-section"><div className="trick-preview-label">{label}</div><p className="trick-preview-text">{val}</p></section>
+          ))}
+        </div>
+      )}
+
+      {!isTrick && (record.frequency || record.naturalness_score) && (
+        <div className="entry-usage-summary">
+          {record.frequency && <span>↻ <b>{record.frequency}</b></span>}
+          {record.naturalness_score && <span>🌡 <b>{record.naturalness_score}/5</b>{record.naturalness_label ? ` · ${record.naturalness_label}` : ''}</span>}
+        </div>
+      )}
+
       <div className="entry-chips flex gap-2 flex-wrap">
         <Chip kind="type" onClick={(e) => { e.stopPropagation(); onTagClick(record.type, 'type'); }}>{record.type}</Chip>
         <Chip kind="status" onClick={(e) => { e.stopPropagation(); onTagClick(record.status || 'New', 'status'); }}>{record.status || 'New'}</Chip>
@@ -235,61 +251,11 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
         {record.register && <Chip kind="register" onClick={(e) => { e.stopPropagation(); onTagClick(record.register, 'register'); }}>{record.register}</Chip>}
         {record.variety && <Chip kind="variety" onClick={(e) => { e.stopPropagation(); onTagClick(record.variety, 'variety'); }}>{record.variety}</Chip>}
         {record.topic && <Chip kind="topic" onClick={(e) => { e.stopPropagation(); onTagClick(record.topic, 'topic'); }}>{record.topic}</Chip>}
-        {tags.map((t, i) => (
-          <Chip key={i} kind="tag" onClick={(e) => { e.stopPropagation(); onTagClick(t, 'tag'); }}>{t}</Chip>
-        ))}
+        {tags.map((t, i) => <Chip key={i} kind="tag" onClick={(e) => { e.stopPropagation(); onTagClick(t, 'tag'); }}>{t}</Chip>)}
       </div>
-      <h3 className="entry-word"><Highlight text={record.word} query={query} /></h3>
-      {(record.pronunciation_easy || record.spanish) && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', margin: '-2px 0 10px' }}>
-          {record.pronunciation_easy && <span style={{ background: '#f2efff', border: '1px solid #ddd5f2', color: '#6c5f89', padding: '5px 9px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700 }}>🗣 {record.pronunciation_easy}</span>}
-          {record.spanish && <span style={{ background: '#fff4e7', border: '1px solid #ead8bd', color: '#806a45', padding: '5px 9px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700 }}>🇪🇸 {record.spanish}</span>}
-        </div>
-      )}
-      {(record.word_class || record.frequency || record.naturalness_score) && (
-        <div className="entry-learning-pills">
-          {record.word_class && <span>◌ {record.word_class}</span>}
-          {record.frequency && <span>↻ {record.frequency}</span>}
-          {record.naturalness_score && <span>🌡 {record.naturalness_score}/5</span>}
-        </div>
-      )}
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); speakWord(record.word, 'en-GB'); }}
-          title="British pronunciation"
-          style={{ padding: '4px 9px', fontSize: '0.7rem', fontWeight: 700, borderRadius: '999px', border: '1px solid #cddbe6', background: '#eaf4fa', color: '#4e7281', display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-        >
-          <Volume2 size={12} /> UK
-        </button>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); speakWord(record.word, 'en-US'); }}
-          title="American pronunciation"
-          style={{ padding: '4px 9px', fontSize: '0.7rem', fontWeight: 700, borderRadius: '999px', border: '1px solid #e6d1c0', background: '#fff3c9', color: '#85671f', display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-        >
-          <Volume2 size={12} /> US
-        </button>
-      </div>
-      {!isTrick && (
-        <p className="entry-meaning text-sm leading-relaxed m-0" style={{ color: '#62596a' }}>
-          <Highlight text={record.meaning || record.explanation || 'No meaning added yet.'} query={query} />
-        </p>
-      )}
-      {isTrick && (
-        <div className="trick-preview">
-          {[['RULE', record.transitive], ['QUICK NOTES', record.how_common], ['EXAMPLES', record.synonyms]]
-            .filter(([, v]) => v).map(([label, val]) => (
-              <section key={label} className="trick-preview-section">
-                <div className="trick-preview-label">{label}</div>
-                <p className="trick-preview-text">{val}</p>
-              </section>
-          ))}
-        </div>
-      )}
+
       <div className="entry-bottom flex flex-wrap gap-2 mt-4">
         {record.is_difficult && <Chip kind="type">Difficult</Chip>}
-        {record.needs_review && <Chip kind="level">Review</Chip>}
         {showAttention && attentionReasons(record).map((reason) => <span key={reason} className="attention-reason">{reason}</span>)}
       </div>
       {quickOpen && <div className="longpress-menu" onClick={(e)=>e.stopPropagation()}><button onClick={()=>{onOpen(record);setQuickOpen(false)}}>Open</button><button onClick={()=>{onToggleFav(record);setQuickOpen(false)}}>{record.is_favourite?'Unfavourite':'Favourite'}</button><button onClick={()=>{onQuickReview?.(record);setQuickOpen(false)}}>{record.needs_review?'Unmark review':'Review later'}</button><button onClick={()=>setQuickOpen(false)}>Close</button></div>}
@@ -363,7 +329,7 @@ export default function LibraryView({
       else if (key === 'smart_collection') {
         const now = Date.now();
         if (value === 'formal-writing') r = r.filter((x) => x.register === 'Formal' || /writing|essay/i.test(`${x.best_for || ''} ${x.useful_for_exams || ''}`));
-        else if (value === 'confusable') r = r.filter((x) => !!String(x.confused_with || x.my_mistakes || '').trim());
+        else if (value === 'confusable') r = r.filter((x) => !!x.i_confuse_this);
         else if (value === 'hard') r = r.filter((x) => x.is_difficult || x.personal_difficulty === 'Hard');
         else if (value === 'forgotten') r = r.filter((x) => {
           const last = new Date(x.last_reviewed_at || x.created_at || 0).getTime();

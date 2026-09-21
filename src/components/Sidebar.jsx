@@ -41,7 +41,7 @@ export default function Sidebar({ currentView, onNavigate }) {
           );
         })}
       </nav>
-      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v6 · everything edition</p>
+      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v7 · card polish</p>
     </aside>
   );
 }

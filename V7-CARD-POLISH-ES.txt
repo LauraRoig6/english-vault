@@ -1,0 +1,15 @@
+English Vault v7 · Card Polish
+
+Cambios principales:
+- Tarjetas de Library reordenadas: palabra + audio UK/US, pronunciación fácil, español, significado, ejemplo, frecuencia/naturalness y chips al final.
+- Eliminado el chip Review visible repetido en las tarjetas.
+- Ficha detallada dividida en General y AI Study Help.
+- Usage Warning movido abajo. Naturalness thermometer al final.
+- Synonyms, Related expressions, Antonyms, Confused with, Word Family, Collocation Cloud y Related Phrasal Verbs agrupados como conexiones léxicas.
+- Palabras ya guardadas aparecen azules y abren su ficha; las no guardadas mantienen estilo neutro y llevan a Add.
+- Word Family con forma orgánica/red y Collocation Cloud con forma de nube.
+- Words I confuse ahora depende de una marca manual “I confuse this”.
+- Títulos de bloques en negrita manteniendo su color original.
+- Shared card Lace: la blonda queda solo como marco exterior, sin velo encima del contenido.
+- Copy template for ChatGPT ahora es sensible al TYPE y Quick Fill reconoce todos los apartados correspondientes.
+- Cache PWA actualizada a v7.

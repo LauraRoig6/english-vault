@@ -218,6 +218,13 @@ export default function EnglishVault({ session, onSignOut }) {
     showToast(record.needs_review ? 'Removed from review queue.' : 'Added to review queue.');
   };
 
+
+  const handleConfuseToggle = (record) => {
+    const next = { ...record, i_confuse_this: !record.i_confuse_this };
+    update(next);
+    setDetailRecord((current) => current && current.__backendId === record.__backendId ? { ...current, i_confuse_this: next.i_confuse_this } : current);
+    showToast(next.i_confuse_this ? 'Added to Words I confuse.' : 'Removed from Words I confuse.');
+  };
   const handleStatusChange = (record, status) => {
     const next = {
       ...record,
@@ -493,7 +500,7 @@ export default function EnglishVault({ session, onSignOut }) {
           onEdit={openEdit}
           onDelete={handleDelete}
           onToggleFav={handleToggleFav}
-          onUpdate={update}
+          onUpdate={handleConfuseToggle}
           onTagClick={(value, kind) => { setDetailRecord(null); openLibraryWithFilter(value, kind); }}
           onRelatedClick={handleRelatedClick}
           onQuiz={handleQuizOne}

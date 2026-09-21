@@ -109,7 +109,7 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             ['formal-writing','Formal writing','Essay-friendly & formal'],
-            ['confusable','Words I confuse','Confused with + my mistakes'],
+            ['confusable','Words I confuse','Only the entries you mark yourself'],
             ['hard','Hard words','Your difficult entries'],
             ['forgotten','Forgotten words','Not reviewed for a while'],
           ].map(([id,label,sub]) => (

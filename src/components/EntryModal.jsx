@@ -11,11 +11,29 @@ const emptyForm = {
   synonyms: '', antonyms: '', related: '', pattern_structure: '', confused_with: '', usage_warning: '', pronunciation_easy: '', word_family: '', typical_collocations: '', best_for: '', avoid_overusing: '', mini_contrast: '', word_class: '', frequency: '', naturalness_score: '', naturalness_label: '', native_alternative: '', useful_for_exams: '', register_ladder: '', my_mistakes: '', personal_difficulty: '', confidence: '', why_useful: '', false_friend: '', etymology: '', variety_usage: '', collocation_mistake: '', sounds_better_as: '', semantic_field: '', personal_note: '', separable: '', transitive: '', similar_expressions: '',
   how_common: '', offensive_warning: '', slang_tags: '',
   trick_category: '', rule: '', explanation: '', examples_list: '', exceptions: '', memory_trick: '', common_mistakes: '',
-  is_favourite: false, is_difficult: false, is_known: false, needs_review: true,
+  is_favourite: false, is_difficult: false, is_known: false, needs_review: true, i_confuse_this: false,
 };
 
-function copyTemplate(word = '') {
-  return `NEW DISCOVERY\n\nWORD / EXPRESSION: ${String(word || '').trim().toLowerCase()}\nTYPE:\nMEANING IN ENGLISH:\nSPANISH:\nEASY PRONUNCIATION:\nNATURAL EXAMPLE:\nMY EXAMPLE:\nREGISTER:\nLEVEL:\nVARIETY:\nTOPIC:\nTAGS:\nSYNONYMS:\nRELATED EXPRESSIONS:\nANTONYMS:\nWORD CLASS:\nWORD FAMILY:\nTYPICAL COLLOCATIONS:\nFREQUENCY:\nNATURALNESS SCORE:\nNATURALNESS LABEL:\nBEST FOR:\nUSEFUL FOR EXAMS:\nNATIVE ALTERNATIVE:\nREGISTER LADDER:\nWHY IS THIS USEFUL?:\nFALSE FRIEND:\nETYMOLOGY / ORIGIN:\nBRITISH VS AMERICAN USAGE:\nCOMMON COLLOCATION MISTAKE:\nSOUNDS BETTER AS:\nSEMANTIC FIELD:\nPERSONAL NOTE:\nPERSONAL DIFFICULTY:\nCONFIDENCE:\nMY MISTAKES:\nPATTERN / STRUCTURE:\nCONFUSED WITH:\nMINI CONTRAST:\nAVOID OVERUSING:\nPHRASAL: SEPARABLE?:\nPHRASAL: TRANSITIVITY:\nRELATED PHRASAL VERBS:\nSLANG: HOW COMMON?:\nUSAGE WARNING:\nSLANG TAGS:\nTRICK CATEGORY:\nRULE:\nEXPLANATION:\nEXAMPLES:\nEXCEPTIONS:\nMEMORY TRICK:\nCOMMON MISTAKES:\nNOTES:`;
+function copyTemplate(word = '', type = 'Vocabulary') {
+  const common = [
+    ['TYPE', type], ['WORD / EXPRESSION', String(word || '').trim().toLowerCase()], ['MEANING IN ENGLISH', ''], ['SPANISH', ''],
+    ['EASY PRONUNCIATION', ''], ['NATURAL EXAMPLE', ''], ['MY EXAMPLE', ''], ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''],
+    ['SYNONYMS', ''], ['RELATED EXPRESSIONS', ''], ['ANTONYMS', ''], ['WORD FAMILY', ''], ['TYPICAL COLLOCATIONS', ''],
+    ['FREQUENCY', ''], ['NATURALNESS SCORE', ''], ['NATURALNESS LABEL', ''], ['BEST FOR', ''], ['USEFUL FOR EXAMS', ''], ['NATIVE ALTERNATIVE', ''],
+    ['REGISTER LADDER', ''], ['WHY IS THIS USEFUL?', ''], ['FALSE FRIEND', ''], ['ETYMOLOGY / ORIGIN', ''], ['BRITISH VS AMERICAN USAGE', ''],
+    ['COMMON COLLOCATION MISTAKE', ''], ['SOUNDS BETTER AS', ''], ['SEMANTIC FIELD', ''], ['PERSONAL NOTE', ''], ['PERSONAL DIFFICULTY', ''], ['CONFIDENCE', ''],
+    ['MY MISTAKES', ''], ['PATTERN / STRUCTURE', ''], ['CONFUSED WITH', ''], ['MINI CONTRAST', ''], ['AVOID OVERUSING', ''], ['USAGE WARNING', ''], ['COMMON MISTAKES', ''], ['NOTES', ''],
+  ];
+  if (type === 'Vocabulary') common.splice(15, 0, ['WORD CLASS', '']);
+  if (type === 'Phrasal Verb') common.splice(-3, 0, ['PHRASAL: SEPARABLE?', ''], ['PHRASAL: TRANSITIVITY', ''], ['RELATED PHRASAL VERBS', '']);
+  if (type === 'Slang') common.splice(-3, 0, ['SLANG: HOW COMMON?', ''], ['SLANG TAGS', '']);
+  if (type === 'Grammar / Trick') {
+    return `NEW DISCOVERY\n\n${[
+      ['TYPE', type], ['WORD / EXPRESSION', String(word || '').trim().toLowerCase()], ['MEANING IN ENGLISH', ''], ['SPANISH', ''], ['NATURAL EXAMPLE', ''], ['MY EXAMPLE', ''],
+      ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''], ['TRICK CATEGORY', ''], ['RULE', ''], ['EXPLANATION', ''], ['EXAMPLES', ''], ['EXCEPTIONS', ''], ['MEMORY TRICK', ''], ['COMMON MISTAKES', ''], ['NOTES', ''],
+    ].map(([k,v]) => `${k}: ${v}`).join('\n')}`;
+  }
+  return `NEW DISCOVERY\n\n${common.map(([k,v]) => `${k}: ${v}`).join('\n')}`;
 }
 
 export default function EntryModal({ onClose, onSave, editingRecord, prefillRecord, existingRecords }) {
@@ -54,6 +72,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
         memory_trick: isTrick ? (editingRecord.memory_trick || editingRecord.related || '') : '',
         common_mistakes: editingRecord.common_mistakes || (isTrick ? editingRecord.notes || '' : ''),
         usage_warning: editingRecord.usage_warning || (!isTrick ? editingRecord.offensive_warning || '' : ''),
+        i_confuse_this: !!editingRecord.i_confuse_this,
         pattern_structure: editingRecord.pattern_structure || '',
         confused_with: editingRecord.confused_with || '',
         pronunciation_easy: editingRecord.pronunciation_easy || '',
@@ -97,7 +116,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       pronunciation_easy: form.pronunciation_easy, word_family: form.word_family, typical_collocations: form.typical_collocations,
       best_for: form.best_for, avoid_overusing: form.avoid_overusing, mini_contrast: form.mini_contrast,
       antonyms: form.antonyms, word_class: form.word_class, frequency: form.frequency, naturalness_score: form.naturalness_score ? Number(form.naturalness_score) : 0, naturalness_label: form.naturalness_label, native_alternative: form.native_alternative, useful_for_exams: form.useful_for_exams, register_ladder: form.register_ladder, my_mistakes: form.my_mistakes, personal_difficulty: form.personal_difficulty, confidence: form.confidence, why_useful: form.why_useful, false_friend: form.false_friend, etymology: form.etymology, variety_usage: form.variety_usage, collocation_mistake: form.collocation_mistake, sounds_better_as: form.sounds_better_as, semantic_field: form.semantic_field, personal_note: form.personal_note,
-      is_favourite: form.is_favourite, is_difficult: form.is_difficult, is_known: form.is_known, needs_review: form.needs_review,
+      is_favourite: form.is_favourite, is_difficult: form.is_difficult, is_known: form.is_known, needs_review: form.needs_review, i_confuse_this: !!form.i_confuse_this,
       status: form.is_known ? 'Mastered' : (form.status || 'New'),
       separable: isTrick ? form.trick_category : form.separable,
       transitive: isTrick ? form.rule : form.transitive,
@@ -216,7 +235,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
 
   const handleCopyTemplate = async () => {
     try {
-      await navigator.clipboard.writeText(copyTemplate(form.word));
+      await navigator.clipboard.writeText(copyTemplate(form.word, form.type));
       setCopyStatus('Template copied! Paste it into ChatGPT ✨');
     } catch {
       setCopyStatus('Copy failed — select the text manually.');
@@ -431,7 +450,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-6">
-            {[['is_favourite', 'Favourite'], ['is_difficult', 'Difficult'], ['is_known', 'I know it'], ['needs_review', 'Need to review']].map(([k, label]) => (
+            {[['is_favourite', 'Favourite'], ['is_difficult', 'Difficult'], ['is_known', 'I know it'], ['needs_review', 'Need to review'], ['i_confuse_this', 'I confuse this']].map(([k, label]) => (
               <label key={k} className="flex gap-2 items-center p-3 rounded-xl" style={{ background: '#fff7fa' }}>
                 <input type="checkbox" checked={form[k]} onChange={(e) => set(k, e.target.checked)} /> {label}
               </label>
