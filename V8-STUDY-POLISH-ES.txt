@@ -1,0 +1,25 @@
+ENGLISH VAULT — v8 STUDY POLISH
+
+Cambios de esta versión:
+- En las tarjetas generales, la traducción ya no usa la banderita/ES: usa icono de traducción.
+- Word Family y Collocation Cloud vuelven a ser bloques rectangulares coherentes con el resto.
+- Collocation Cloud mantiene tamaños de palabra variables para dar sensación de relevancia/uso.
+- Shared card Lace rehecha: mismo centro limpio que Minimal + marco de blonda exterior blanco/rosa. Nada de velo encima del contenido.
+- Eliminado el estilo Notebook del selector de tarjeta compartida.
+- Los botones 3 context examples / Explícamelo en español / Improve this entry / Quiz me on this quedan en una sola fila (con scroll horizontal en pantallas estrechas).
+- Los filtros de Library/Categorías ahora están plegados tras un botón Filters.
+- Cozy / Compact queda al lado del botón Filters.
+- Guardar filtros sigue dentro del panel desplegable.
+- Tricks / Grammar tiene una ficha mucho más visual: Quick Take, Rule, Visual Scheme, Explanation, Modo choni (pero correcto), Examples, Exceptions, Memory Trick y Common Mistakes.
+- Autofill IA para Grammar / Trick genera también Quick Summary, Visual Scheme y Choni Explanation.
+- Copy template for ChatGPT y Quick Fill reconocen esos nuevos apartados.
+- Se mantiene Supabase y el formato JSON; no requiere cambios de tabla.
+
+Comprobaciones rápidas:
+1. Ver v8 · study polish en la barra lateral.
+2. Abrir Vocabulary: comprobar icono de traducción y filtros plegados.
+3. Abrir Filters: comprobar que conserva todos los filtros y Save filters.
+4. Abrir una ficha: los 4 botones AI deben estar en línea.
+5. Revisar Word Family/Collocation Cloud: bloques rectangulares; collocations con tamaños variados.
+6. Share card: solo Lace y Minimal; Lace debe tener marco exterior y centro legible.
+7. Crear/Autofill un Grammar / Trick: deben aparecer Quick Summary, Visual Scheme y Choni Explanation, y guardarse tras cerrar/reabrir.

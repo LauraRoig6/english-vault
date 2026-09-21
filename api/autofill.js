@@ -5,7 +5,7 @@ const schema = {
   additionalProperties: false,
   required: [
     'type','word','meaning','spanish','pronunciation_easy','example','my_example','register','level','variety','topic','tags','synonyms','antonyms','related','word_class','word_family','typical_collocations','frequency','naturalness_score','naturalness_label','native_alternative','useful_for_exams','register_ladder','my_mistakes','personal_difficulty','confidence','why_useful','false_friend','etymology','variety_usage','collocation_mistake','sounds_better_as','semantic_field','personal_note','pattern_structure','confused_with','mini_contrast','best_for','avoid_overusing','usage_warning',
-    'separable','transitive','similar_expressions','how_common','offensive_warning','slang_tags','trick_category','rule','explanation',
+    'separable','transitive','similar_expressions','how_common','offensive_warning','slang_tags','trick_category','quick_summary','rule','visual_scheme','explanation','choni_explanation',
     'examples_list','exceptions','memory_trick','common_mistakes','notes'
   ],
   properties: {
@@ -18,8 +18,8 @@ const schema = {
     word_family: { type: 'string' }, typical_collocations: { type: 'string' }, frequency: { type: 'string' }, naturalness_score: { type: 'integer', minimum: 1, maximum: 5 }, naturalness_label: { type: 'string' }, native_alternative: { type: 'string' }, useful_for_exams: { type: 'string' }, register_ladder: { type: 'string' }, my_mistakes: { type: 'string' }, personal_difficulty: { type: 'string' }, confidence: { type: 'string' }, why_useful: { type: 'string' }, false_friend: { type: 'string' }, etymology: { type: 'string' }, variety_usage: { type: 'string' }, collocation_mistake: { type: 'string' }, sounds_better_as: { type: 'string' }, semantic_field: { type: 'string' }, personal_note: { type: 'string' },
     pattern_structure: { type: 'string' }, confused_with: { type: 'string' }, mini_contrast: { type: 'string' }, best_for: { type: 'string' }, avoid_overusing: { type: 'string' }, usage_warning: { type: 'string' },
     separable: { type: 'string' }, transitive: { type: 'string' }, similar_expressions: { type: 'string' }, how_common: { type: 'string' },
-    offensive_warning: { type: 'string' }, slang_tags: { type: 'string' }, trick_category: { type: 'string' }, rule: { type: 'string' },
-    explanation: { type: 'string' }, examples_list: { type: 'string' }, exceptions: { type: 'string' }, memory_trick: { type: 'string' },
+    offensive_warning: { type: 'string' }, slang_tags: { type: 'string' }, trick_category: { type: 'string' }, quick_summary: { type: 'string' }, rule: { type: 'string' }, visual_scheme: { type: 'string' },
+    explanation: { type: 'string' }, choni_explanation: { type: 'string' }, examples_list: { type: 'string' }, exceptions: { type: 'string' }, memory_trick: { type: 'string' },
     common_mistakes: { type: 'string' }, notes: { type: 'string' }
   }
 };
@@ -64,7 +64,7 @@ MY MISTAKES, PERSONAL DIFFICULTY and CONFIDENCE belong to the learner, so ALWAYS
 
 Populate usage_warning whenever register, grammar, connotation, countability, collocation or context could cause a learner mistake. COMMON MISTAKES MUST be non-empty for every non-Grammar/Trick entry: give 1-2 concise, specific learner mistakes or usage traps. For idioms, include a literal-translation/fixed-expression trap when relevant. For connectors, mention punctuation/position/register if useful. For vocabulary, mention a realistic collocation, meaning, register, countability, preposition or false-friend trap. Never invent an unrelated comparison merely to fill it. Never use em dashes as placeholders.
 
-For Grammar / Trick, fully populate trick_category, rule, explanation, examples_list, exceptions, memory_trick and common_mistakes. For Phrasal Verb, populate separable, transitive and similar_expressions. For Slang, populate how_common, usage_warning and slang_tags. Keep offensive_warning empty unless it is needed for backward compatibility. For Connector / Linker, make the function in discourse clear. Do not invent a MY EXAMPLE for the learner: my_example must be an empty string.`
+For Grammar / Trick, fully populate trick_category, quick_summary, rule, visual_scheme, explanation, choni_explanation, examples_list, exceptions, memory_trick and common_mistakes. QUICK SUMMARY is one short takeaway. VISUAL SCHEME should be a compact text diagram using arrows (→), short lines or contrasts that the UI can render as visual steps. CHONI EXPLANATION must be in Spanish, funny and memorable in a playful colloquial tone, but pedagogically correct and never vulgar, insulting or misleading. Keep it concise. For Phrasal Verb, populate separable, transitive and similar_expressions. For Slang, populate how_common, usage_warning and slang_tags. Keep offensive_warning empty unless it is needed for backward compatibility. For Connector / Linker, make the function in discourse clear. Do not invent a MY EXAMPLE for the learner: my_example must be an empty string.`
 
   try {
     const response = await fetch('https://api.openai.com/v1/responses', {
