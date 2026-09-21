@@ -88,13 +88,22 @@ export default function EnglishVault({ session, onSignOut }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const openSmartCollection = (id) => {
+    setCurrentView('vocabulary');
+    setLibrarySpecificType('');
+    setLibraryTagFilter('');
+    setLibraryTopicFilter('');
+    setLibraryExtraFilter({ key: 'smart_collection', value: id });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Any chip clicked (level/register/variety/status/type) → filter across all
   const openLibraryWithFilter = (value, kind) => {
     if (kind === 'tag') return openLibraryWithTag(value);
     if (kind === 'topic') return openLibraryWithTopic(value);
     if (kind === 'type') {
       // Navigate to that type's library section
-      const map = { 'Vocabulary': 'vocabulary', 'Slang': 'slang', 'Phrasal Verb': 'phrasal', 'Connector / Linker': 'connectors', 'Grammar / Trick': 'tricks' };
+      const map = { 'Vocabulary': 'vocabulary', 'Verb': 'verbs', 'Slang': 'slang', 'Phrasal Verb': 'phrasal', 'Connector / Linker': 'connectors', 'Grammar / Trick': 'tricks' };
       if (map[value]) return openView(map[value]);
       if (value === 'Idiom') return openView('idioms');
       if (['Expression', 'Collocation'].includes(value)) return openCategory(value);
@@ -154,6 +163,7 @@ export default function EnglishVault({ session, onSignOut }) {
     if (!type) return null;
     const map = {
       'Vocabulary': 'vocabulary',
+      'Verb': 'verbs',
       'Slang': 'slang',
       'Phrasal Verb': 'phrasal',
       'Connector / Linker': 'connectors',
@@ -324,7 +334,7 @@ export default function EnglishVault({ session, onSignOut }) {
               onChange={(e) => {
                 setSearch(e.target.value);
                 // Auto-jump to library on first keystroke so results are visible
-                if (e.target.value && !['vocabulary', 'slang', 'phrasal', 'expressions', 'idioms', 'connectors', 'tricks', 'favourites'].includes(currentView)) {
+                if (e.target.value && !['vocabulary', 'verbs', 'slang', 'phrasal', 'expressions', 'idioms', 'connectors', 'tricks', 'favourites'].includes(currentView)) {
                   setCurrentView('vocabulary');
                   setLibrarySpecificType('');
                 }
@@ -369,10 +379,11 @@ export default function EnglishVault({ session, onSignOut }) {
             surpriseLoading={surpriseLoading}
             onStartDue={handleStartDue}
             onNeedsAttention={openNeedsAttention}
+            onSmartCollection={openSmartCollection}
           />
         )}
 
-        {['vocabulary', 'slang', 'phrasal', 'expressions', 'idioms', 'connectors', 'tricks', 'favourites'].includes(currentView) && (
+        {['vocabulary', 'verbs', 'slang', 'phrasal', 'expressions', 'idioms', 'connectors', 'tricks', 'favourites'].includes(currentView) && (
           <LibraryView
             records={records}
             currentView={currentView}

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2 } from 'lucide-react';
+import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2, Zap } from 'lucide-react';
 
 function speakWord(text, lang = 'en-US') {
   if (!text) return;
@@ -18,6 +18,7 @@ function speakWord(text, lang = 'en-US') {
 
 const typeMap = {
   vocabulary: 'Vocabulary',
+  verbs: 'Verb',
   slang: 'Slang',
   phrasal: 'Phrasal Verb',
   expressions: ['Expression', 'Collocation'],
@@ -27,6 +28,7 @@ const typeMap = {
 };
 
 const headings = {
+  verbs: ['Verbs', 'Ordinary lexical verbs, separate from phrasal verbs.'],
   vocabulary: ['Vocabulary', 'Words worth keeping close.'],
   slang: ['Slang', 'Natural, modern and colloquial English.'],
   phrasal: ['Phrasal Verbs', 'Explore meaning, usage and related verbs.'],
@@ -103,7 +105,7 @@ function smartSearchMatch(record, query) {
   const raw = String(query || '').trim();
   if (!raw) return true;
   const q = raw.toLowerCase();
-  const exactMeta = [record.level, record.register, record.variety, record.status || 'New', record.type, record.topic]
+  const exactMeta = [record.level, record.register, record.variety, record.status || 'New', record.type, record.topic, record.word_class, record.frequency, record.personal_difficulty]
     .filter(Boolean).some((v) => String(v).toLowerCase() === q);
   const exactTag = String(record.tags || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean).includes(q);
   if (exactMeta || exactTag) return true;
@@ -156,6 +158,7 @@ function fuzzyMatch(record, query) {
     record.example, record.rule, record.explanation, record.level, record.register,
     record.variety, record.status, record.how_common, record.slang_tags,
     record.similar_expressions, record.common_mistakes, record.pattern_structure, record.confused_with, record.usage_warning,
+    record.word_class, record.antonyms, record.frequency, record.naturalness_label, record.native_alternative, record.useful_for_exams, record.register_ladder, record.my_mistakes, record.personal_difficulty, record.why_useful, record.false_friend,
   ];
   return tokens.every((t) => fields.some((field) => textHasFuzzyToken(field, t)));
 }
@@ -221,6 +224,13 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', margin: '-2px 0 10px' }}>
           {record.pronunciation_easy && <span style={{ background: '#f2efff', border: '1px solid #ddd5f2', color: '#6c5f89', padding: '5px 9px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700 }}>🗣 {record.pronunciation_easy}</span>}
           {record.spanish && <span style={{ background: '#fff4e7', border: '1px solid #ead8bd', color: '#806a45', padding: '5px 9px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700 }}>🇪🇸 {record.spanish}</span>}
+        </div>
+      )}
+      {(record.word_class || record.frequency || record.naturalness_score) && (
+        <div className="entry-learning-pills">
+          {record.word_class && <span>◌ {record.word_class}</span>}
+          {record.frequency && <span>↻ {record.frequency}</span>}
+          {record.naturalness_score && <span>🌡 {record.naturalness_score}/5</span>}
         </div>
       )}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
@@ -310,6 +320,16 @@ export default function LibraryView({
         if (x.type === 'Grammar / Trick') return !(x.rule || x.transitive) || !(x.explanation || x.how_common) || !(x.common_mistakes || x.notes);
         return !x.meaning || !x.spanish || !x.example || !x.common_mistakes || !x.pronunciation_easy;
       });
+      else if (key === 'smart_collection') {
+        const now = Date.now();
+        if (value === 'formal-writing') r = r.filter((x) => x.register === 'Formal' || /writing|essay/i.test(`${x.best_for || ''} ${x.useful_for_exams || ''}`));
+        else if (value === 'confusable') r = r.filter((x) => !!String(x.confused_with || x.my_mistakes || '').trim());
+        else if (value === 'hard') r = r.filter((x) => x.is_difficult || x.personal_difficulty === 'Hard');
+        else if (value === 'forgotten') r = r.filter((x) => {
+          const last = new Date(x.last_reviewed_at || x.created_at || 0).getTime();
+          return last && (now - last) > 30 * 24 * 60 * 60 * 1000 && !x.is_known;
+        });
+      }
       else r = r.filter((x) => (x[key] || '') === value);
     }
     if (search && search.trim()) r = r.filter((x) => smartSearchMatch(x, search));
@@ -352,12 +372,13 @@ export default function LibraryView({
     else if (kind === 'type') {
       if (value === 'Idiom') onNavigate('idioms');
       else if (['Expression', 'Collocation'].includes(value)) onOpenCategory(value);
-      else { const map = { 'Vocabulary': 'vocabulary', 'Slang': 'slang', 'Phrasal Verb': 'phrasal', 'Connector / Linker': 'connectors', 'Grammar / Trick': 'tricks' }; if (map[value]) onNavigate(map[value]); }
+      else { const map = { 'Vocabulary': 'vocabulary', 'Verb': 'verbs', 'Slang': 'slang', 'Phrasal Verb': 'phrasal', 'Connector / Linker': 'connectors', 'Grammar / Trick': 'tricks' }; if (map[value]) onNavigate(map[value]); }
     } else if (setExtraFilter) setExtraFilter({ key: kind, value });
   };
 
   const mobileCats = [
     { id: 'vocabulary', label: 'Vocabulary', icon: BookMarked },
+    { id: 'verbs', label: 'Verbs', icon: Zap },
     { id: 'slang', label: 'Slang', icon: MessageCircle },
     { id: 'phrasal', label: 'Phrasal Verbs', icon: Link2 },
     { id: 'expression', label: 'Expressions', icon: Quote },
@@ -435,7 +456,7 @@ export default function LibraryView({
           )}
           {extraFilter && extraFilter.value && (
             <span className={`chip chip-${extraFilter.key === 'level' ? 'level' : extraFilter.key === 'register' ? 'register' : extraFilter.key === 'variety' ? 'variety' : extraFilter.key === 'needs_attention' ? 'type' : 'status'} inline-flex items-center gap-1`} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
-              {extraFilter.key === 'needs_attention' ? 'Needs attention' : `${extraFilter.key.charAt(0).toUpperCase() + extraFilter.key.slice(1)}: ${extraFilter.value}`}
+              {extraFilter.key === 'needs_attention' ? 'Needs attention' : extraFilter.key === 'smart_collection' ? `Collection: ${extraFilter.value.replace(/-/g,' ')}` : `${extraFilter.key.charAt(0).toUpperCase() + extraFilter.key.slice(1)}: ${extraFilter.value}`}
               <button type="button" onClick={() => setExtraFilter && setExtraFilter(null)} aria-label="Remove filter" style={{ background: 'transparent', border: 0, cursor: 'pointer', padding: 0, marginLeft: '4px', display: 'inline-flex' }}>
                 <X size={13} />
               </button>
@@ -450,7 +471,7 @@ export default function LibraryView({
           <div className="field"><label>TYPE</label>
             <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
               <option value="">All types</option>
-              {['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'].map((x) => <option key={x}>{x}</option>)}
+              {['Vocabulary', 'Verb', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'].map((x) => <option key={x}>{x}</option>)}
             </select>
           </div>
           <div className="field"><label>LEVEL</label>

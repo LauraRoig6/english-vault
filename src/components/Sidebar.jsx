@@ -1,9 +1,10 @@
 import React from 'react';
-import { House, LibraryBig, MessageCircle, Link2, Sparkles, GitBranch, Brain, GraduationCap, Heart } from 'lucide-react';
+import { House, LibraryBig, MessageCircle, Link2, Sparkles, GitBranch, Brain, GraduationCap, Heart, Zap } from 'lucide-react';
 
 const navItems = [
   { id: 'home', label: 'Home', icon: House },
   { id: 'vocabulary', label: 'Vocabulary', icon: LibraryBig },
+  { id: 'verbs', label: 'Verbs', icon: Zap },
   { id: 'slang', label: 'Slang', icon: MessageCircle },
   { id: 'phrasal', label: 'Phrasal Verbs', icon: Link2 },
   { id: 'expressions', label: 'Expressions & Collocations', icon: Sparkles },
@@ -40,7 +41,7 @@ export default function Sidebar({ currentView, onNavigate }) {
           );
         })}
       </nav>
-      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v4 · final polish</p>
+      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v5 · all-in learning</p>
     </aside>
   );
 }

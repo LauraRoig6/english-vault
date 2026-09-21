@@ -1,4 +1,4 @@
-const ALLOWED_TYPES = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker'];
+const ALLOWED_TYPES = ['Vocabulary', 'Verb', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker'];
 
 const schema = {
   type: 'object',
@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
     ? req.body.exclude.map((x) => String(x || '').trim()).filter(Boolean).slice(0, 300)
     : [];
 
-  const instructions = `You suggest ONE genuinely useful new English discovery for a personal English-learning app. It must be something an intermediate/advanced learner could realistically want to keep: an interesting vocabulary item, slang item, phrasal verb, expression, collocation, idiom, or connector/linker. Avoid extremely basic words, obscure dictionary curiosities, proper names, offensive content, and anything in the exclusion list. Prefer natural modern English. Prefer British English when variety matters, but return Both when appropriate. The teaser must be short and enticing, not a full dictionary entry. Do not return Grammar / Trick here.`;
+  const instructions = `You suggest ONE genuinely useful new English discovery for a personal English-learning app. It must be something an intermediate/advanced learner could realistically want to keep: an interesting vocabulary item, lexical verb, slang item, phrasal verb, expression, collocation, idiom, or connector/linker. Avoid extremely basic words, obscure dictionary curiosities, proper names, offensive content, and anything in the exclusion list. Prefer natural modern English. Prefer British English when variety matters, but return Both when appropriate. The teaser must be short and enticing, not a full dictionary entry. Do not return Grammar / Trick here.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/responses', {

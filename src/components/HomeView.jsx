@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plus, Sparkles, BookMarked, MessageCircle, Link2, Quote, GitBranch, Puzzle, Lightbulb, Brain, Heart, Clock3 } from 'lucide-react';
+import { Plus, Sparkles, BookMarked, MessageCircle, Link2, Quote, GitBranch, Puzzle, Lightbulb, Brain, Heart, Clock3, Zap, Layers3 } from 'lucide-react';
 import { isDue } from '../lib/vaultUtils';
 
 
@@ -8,9 +8,9 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
-export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue, onNeedsAttention }) {
+export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue, onNeedsAttention, onSmartCollection }) {
   const stats = useMemo(() => {
-    const counts = { Vocabulary: 0, Slang: 0, 'Phrasal Verb': 0, Expression: 0, Collocation: 0, Idiom: 0, 'Connector / Linker': 0, 'Grammar / Trick': 0 };
+    const counts = { Vocabulary: 0, Verb: 0, Slang: 0, 'Phrasal Verb': 0, Expression: 0, Collocation: 0, Idiom: 0, 'Connector / Linker': 0, 'Grammar / Trick': 0 };
     records.forEach((r) => { if (counts[r.type] !== undefined) counts[r.type]++; });
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     return {
@@ -34,6 +34,7 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
 
   const categoryCards = [
     { id: 'vocabulary', label: 'Vocabulary', sub: 'saved discoveries', icon: BookMarked, bg: 'pastel-pink', count: stats.counts.Vocabulary, action: () => onNavigate('vocabulary') },
+    { id: 'verbs', label: 'Verbs', sub: 'lexical verbs', icon: Zap, bg: 'pastel-sage', count: stats.counts.Verb, action: () => onNavigate('verbs') },
     { id: 'slang', label: 'Slang', sub: 'expressions', icon: MessageCircle, bg: 'pastel-lavender', count: stats.counts.Slang, action: () => onNavigate('slang') },
     { id: 'phrasal', label: 'Phrasal Verbs', sub: 'saved verbs', icon: Link2, bg: 'pastel-butter', count: stats.counts['Phrasal Verb'], action: () => onNavigate('phrasal') },
     { id: 'expr', label: 'Expressions', sub: 'natural phrases', icon: Quote, bg: 'pastel-sky', count: stats.counts.Expression, action: () => onOpenCategory('Expression') },
@@ -88,6 +89,29 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
               </button>
             );
           })}
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="flex justify-between items-end mb-4">
+          <div><p className="eyebrow">Auto-organised for you</p><h2 className="section-heading">Smart collections</h2></div>
+          <Layers3 size={20} style={{ color: '#9d4f6e' }} />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            ['formal-writing','Formal writing','Essay-friendly & formal'],
+            ['confusable','Words I confuse','Confused with + my mistakes'],
+            ['hard','Hard words','Your difficult entries'],
+            ['forgotten','Forgotten words','Not reviewed for a while'],
+          ].map(([id,label,sub]) => (
+            <button key={id} type="button" className="card p-4 text-left smart-collection-card" onClick={() => onSmartCollection?.(id)}>
+              <strong className="block">{label}</strong><span className="text-xs mt-1 block" style={{ color:'#766a72' }}>{sub}</span>
+            </button>
+          ))}
+        </div>
+        <div className="card p-4 mt-3" style={{ background:'#fffaf0' }}>
+          <strong>Weekly recap ✦</strong>
+          <span className="text-sm ml-2" style={{ color:'#726773' }}>You added {stats.addedWeek} {stats.addedWeek === 1 ? 'entry' : 'entries'} this week and have {stats.mastered} mastered in total.</span>
         </div>
       </section>
 

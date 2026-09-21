@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { X, Heart, Volume2, Share2, Sparkles, Languages, GraduationCap, AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { X, Heart, Volume2, Share2, Sparkles, Languages, GraduationCap, AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, Check, GitCompareArrows, WandSparkles, MessageSquareText } from 'lucide-react';
 import { splitList, normalizeEntryText } from '../lib/vaultUtils';
 
 function speak(text, lang) {
@@ -67,6 +67,11 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
   const [helpError, setHelpError] = useState('');
   const [spanishSlide, setSpanishSlide] = useState(0);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [compareWord, setCompareWord] = useState('');
+  const [compareResult, setCompareResult] = useState(null);
+  const [sentenceText, setSentenceText] = useState('');
+  const [sentenceResult, setSentenceResult] = useState(null);
+  const [improveResult, setImproveResult] = useState(null);
   const shareRef = useRef(null);
 
   if (!record) return null;
@@ -89,6 +94,9 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
     ['Memory trick', record.memory_trick || record.related],
     ['Common mistakes', record.common_mistakes || record.notes],
   ] : [
+    ['Word class', record.word_class], ['Frequency', record.frequency], ['Naturalness note', record.naturalness_label],
+    ['Why this is useful', record.why_useful], ['Native alternative', record.native_alternative], ['Useful for exams', record.useful_for_exams], ['Register ladder', record.register_ladder], ['False friend', record.false_friend],
+    ['Personal difficulty', record.personal_difficulty], ['Confidence', record.confidence], ['My mistakes', record.my_mistakes],
     ['Pattern / structure', record.pattern_structure],
     ['Word family', record.word_family], ['Typical collocations', record.typical_collocations],
     ['Best for', record.best_for], ['Avoid overusing', record.avoid_overusing], ['Mini contrast', record.mini_contrast],
@@ -102,11 +110,15 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
     try {
       const response = await fetch('/api/word-help', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, word: record.word, meaning: record.meaning || record.explanation || '', type: record.type || '' }),
+        body: JSON.stringify({ mode, word: record.word, meaning: record.meaning || record.explanation || '', type: record.type || '', compare_word: compareWord, sentence: sentenceText, record }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || 'Could not generate this help.');
-      if (mode === 'contexts') setContextExamples(data.examples || []); else { setSpanishHelp(data); setSpanishSlide(0); }
+      if (mode === 'contexts') setContextExamples(data.examples || []);
+      else if (mode === 'spanish') { setSpanishHelp(data); setSpanishSlide(0); }
+      else if (mode === 'compare') setCompareResult(data);
+      else if (mode === 'sentence') setSentenceResult(data);
+      else if (mode === 'improve') setImproveResult(data);
     } catch (err) { setHelpError(err?.message || 'Could not generate this help.'); }
     finally { setHelpLoading(''); }
   };
@@ -172,12 +184,24 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           </section>
         )}
 
+        {!isTrick && record.naturalness_score && (
+          <section className="naturalness-card mt-5">
+            <div className="naturalness-head"><div><p className="eyebrow m-0">Naturalness</p><strong>{record.naturalness_label || ({1:'Unnatural / awkward',2:'A bit forced',3:'Neutral',4:'Natural',5:'Very natural'})[record.naturalness_score]}</strong></div><span className="naturalness-score">{record.naturalness_score}/5</span></div>
+            <div className="naturalness-thermometer" aria-label={`Naturalness ${record.naturalness_score} out of 5`}>
+              {[1,2,3,4,5].map((n) => <span key={n} className={`naturalness-step n${n} ${n <= Number(record.naturalness_score) ? 'filled' : ''}`} />)}
+              <span className="naturalness-marker" style={{ left: `calc(${((Number(record.naturalness_score)-1)/4)*100}% - 7px)` }} />
+            </div>
+            <div className="naturalness-labels"><span>awkward</span><span>very natural</span></div>
+          </section>
+        )}
+
         {!isTrick && (
           <section className="mt-5 rounded-2xl p-4" style={{ background: '#fffafc', border: '1px solid #efd3df' }}>
             <p className="eyebrow" style={{ marginBottom: '8px' }}>AI study help</p>
             <div className="flex flex-wrap gap-2">
               <button className="soft-btn" type="button" onClick={() => askAiHelp('contexts')} disabled={!!helpLoading}><Sparkles size={15} style={{ display: 'inline', marginRight: 5 }} />{helpLoading === 'contexts' ? 'Generating…' : '3 context examples'}</button>
               <button className="soft-btn" type="button" onClick={() => askAiHelp('spanish')} disabled={!!helpLoading}><Languages size={15} style={{ display: 'inline', marginRight: 5 }} />{helpLoading === 'spanish' ? 'Explicando…' : 'Explícamelo en español'}</button>
+              <button className="soft-btn" type="button" onClick={() => askAiHelp('improve')} disabled={!!helpLoading}><WandSparkles size={15} style={{ display: 'inline', marginRight: 5 }} />{helpLoading === 'improve' ? 'Checking…' : 'Improve this entry'}</button>
               <button className="primary-btn" type="button" onClick={() => onQuiz?.(record)}><GraduationCap size={15} style={{ display: 'inline', marginRight: 5 }} />Quiz me on this</button>
             </div>
             {helpError && <p className="text-sm mt-3" style={{ color: '#9d4f6e' }}>{helpError}</p>}
@@ -205,6 +229,21 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
                 </div>
               );
             })()}
+            {improveResult?.suggestions?.length > 0 && <div className="ai-result-box mt-4"><strong>✨ Suggested improvements</strong><ul>{improveResult.suggestions.map((x,i)=><li key={i}>{x}</li>)}</ul></div>}
+            <div className="ai-tool-grid mt-4">
+              <div className="ai-mini-tool">
+                <p className="text-xs font-bold tracking-widest m-0">AI COMPARE</p>
+                <select value={compareWord} onChange={(e)=>setCompareWord(e.target.value)}><option value="">Choose another Vault entry</option>{allRecords.filter(r=>r.__backendId!==record.__backendId).slice().sort((a,b)=>String(a.word).localeCompare(String(b.word))).map(r=><option key={r.__backendId} value={r.word}>{r.word}</option>)}</select>
+                <button className="soft-btn mt-2" type="button" disabled={!compareWord || !!helpLoading} onClick={()=>askAiHelp('compare')}><GitCompareArrows size={14} style={{display:'inline',marginRight:5}}/>Compare</button>
+                {compareResult && <div className="ai-result-box mt-3"><strong>{compareResult.headline}</strong><p>{compareResult.difference}</p><p className="text-sm"><b>Use {record.word} when:</b> {compareResult.use_first}</p><p className="text-sm"><b>Use {compareWord} when:</b> {compareResult.use_second}</p></div>}
+              </div>
+              <div className="ai-mini-tool">
+                <p className="text-xs font-bold tracking-widest m-0">CHECK MY SENTENCE</p>
+                <textarea placeholder={`Write your own sentence with “${record.word}”…`} value={sentenceText} onChange={(e)=>setSentenceText(e.target.value)} />
+                <button className="soft-btn mt-2" type="button" disabled={!sentenceText.trim() || !!helpLoading} onClick={()=>askAiHelp('sentence')}><MessageSquareText size={14} style={{display:'inline',marginRight:5}}/>Check naturalness</button>
+                {sentenceResult && <div className="ai-result-box mt-3"><strong>{sentenceResult.verdict}</strong><p>{sentenceResult.feedback}</p>{sentenceResult.improved_sentence && <p className="text-sm"><b>More natural:</b> {sentenceResult.improved_sentence}</p>}</div>}
+              </div>
+            </div>
           </section>
         )}
 
@@ -234,6 +273,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           })}
           {!isTrick && <RelatedPills label="SYNONYMS" value={record.synonyms} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
           {!isTrick && <RelatedPills label="RELATED EXPRESSIONS" value={record.related} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
+          {!isTrick && <RelatedPills label="ANTONYMS" value={record.antonyms} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
           {!isTrick && <RelatedPills label="CONFUSED WITH" value={record.confused_with} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
           {!isTrick && <RelatedPills label="RELATED PHRASAL VERBS" value={record.similar_expressions} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
         </div>

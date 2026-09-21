@@ -6,6 +6,7 @@ const isDue = (r) => !r.next_review_at || String(r.next_review_at).slice(0, 10) 
 const categories = [
   { id: 'all', label: 'All entries' },
   { id: 'Vocabulary', label: 'Vocabulary' },
+  { id: 'Verb', label: 'Verbs' },
   { id: 'Slang', label: 'Slang' },
   { id: 'Phrasal Verb', label: 'Phrasal Verbs' },
   { id: 'Expression', label: 'Expressions' },

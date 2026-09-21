@@ -1,0 +1,37 @@
+ENGLISH VAULT · v5 ALL-IN LEARNING
+
+NOVEDADES PRINCIPALES
+- Nueva categoría TYPE: Verb, separada de Vocabulary y Phrasal Verb.
+- Sección Verbs en sidebar, Library, móvil, Home, Practice, filtros y Surprise Me.
+- Word Class para Vocabulary: Noun / Adjective / Adverb / Other.
+- Antonyms clicables igual que Synonyms / Related / Confused With.
+- Frequency: Very common / Common / Less common / Rare.
+- Naturalness 1–5 con termómetro pastel verde/amarillo/naranja/rojo y nota explicativa.
+- Native alternative.
+- Useful for exams.
+- Register ladder.
+- Why is this useful?
+- False friend.
+- Personal difficulty.
+- Confidence.
+- My mistakes.
+- Smart Collections: Formal writing, Words I confuse, Hard words, Forgotten words.
+- Weekly recap en Home.
+- AI Compare entre dos entradas del Vault.
+- Check my sentence para comprobar si usas una palabra de forma natural.
+- Improve this entry para auditar y sugerir mejoras.
+- Todo lo nuevo se incluye en Autofill, Copy template y Quick fill cuando corresponde.
+
+COMPATIBILIDAD
+- No requiere cambiar la tabla de Supabase: los nuevos campos se guardan en data JSON.
+- Las entradas antiguas siguen funcionando; los campos nuevos aparecerán vacíos hasta que los rellenes o uses Autofill.
+
+PRUEBAS RÁPIDAS
+1. Add → escribe "to blare" → Autofill: debería clasificarlo como Verb.
+2. Escribe "banana" → debería seguir como Vocabulary y mostrar Word Class = Noun.
+3. Abre una entrada nueva con Autofill → mira Frequency + Naturalness.
+4. Comprueba el termómetro pastel en la ficha.
+5. Abre Home → Smart collections + Weekly recap.
+6. Dentro de una ficha → AI Compare, Check my sentence, Improve this entry.
+7. Copy template → deben salir los nuevos campos.
+8. Library → filtro TYPE debe incluir Verb.

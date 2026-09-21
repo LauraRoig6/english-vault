@@ -1,10 +1,10 @@
-const ALLOWED_TYPES = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
+const ALLOWED_TYPES = ['Vocabulary', 'Verb', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
 
 const schema = {
   type: 'object',
   additionalProperties: false,
   required: [
-    'type','word','meaning','spanish','pronunciation_easy','example','my_example','register','level','variety','topic','tags','synonyms','related','word_family','typical_collocations','pattern_structure','confused_with','mini_contrast','best_for','avoid_overusing','usage_warning',
+    'type','word','meaning','spanish','pronunciation_easy','example','my_example','register','level','variety','topic','tags','synonyms','antonyms','related','word_class','word_family','typical_collocations','frequency','naturalness_score','naturalness_label','native_alternative','useful_for_exams','register_ladder','my_mistakes','personal_difficulty','confidence','why_useful','false_friend','pattern_structure','confused_with','mini_contrast','best_for','avoid_overusing','usage_warning',
     'separable','transitive','similar_expressions','how_common','offensive_warning','slang_tags','trick_category','rule','explanation',
     'examples_list','exceptions','memory_trick','common_mistakes','notes'
   ],
@@ -14,8 +14,8 @@ const schema = {
     register: { type: 'string', enum: ['', 'Formal', 'Neutral', 'Informal', 'Slang'] },
     level: { type: 'string', enum: ['', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Native-like'] },
     variety: { type: 'string', enum: ['', 'British English', 'American English', 'Both'] },
-    topic: { type: 'string' }, tags: { type: 'string' }, synonyms: { type: 'string' }, related: { type: 'string' },
-    word_family: { type: 'string' }, typical_collocations: { type: 'string' },
+    topic: { type: 'string' }, tags: { type: 'string' }, synonyms: { type: 'string' }, antonyms: { type: 'string' }, related: { type: 'string' }, word_class: { type: 'string' },
+    word_family: { type: 'string' }, typical_collocations: { type: 'string' }, frequency: { type: 'string' }, naturalness_score: { type: 'integer', minimum: 1, maximum: 5 }, naturalness_label: { type: 'string' }, native_alternative: { type: 'string' }, useful_for_exams: { type: 'string' }, register_ladder: { type: 'string' }, my_mistakes: { type: 'string' }, personal_difficulty: { type: 'string' }, confidence: { type: 'string' }, why_useful: { type: 'string' }, false_friend: { type: 'string' },
     pattern_structure: { type: 'string' }, confused_with: { type: 'string' }, mini_contrast: { type: 'string' }, best_for: { type: 'string' }, avoid_overusing: { type: 'string' }, usage_warning: { type: 'string' },
     separable: { type: 'string' }, transitive: { type: 'string' }, similar_expressions: { type: 'string' }, how_common: { type: 'string' },
     offensive_warning: { type: 'string' }, slang_tags: { type: 'string' }, trick_category: { type: 'string' }, rule: { type: 'string' },
@@ -41,7 +41,20 @@ Populate word_family only with useful members of the same lexical family, as sho
 
 Populate confused_with ONLY when there is a genuinely confusable word or expression that learners actually mix up with the target because of similar form, meaning, translation, or usage. NEVER put a mere synonym, related phrase, thematic neighbour, or explanation there. If there is no genuine confusion pair, return an empty string. MINI CONTRAST is allowed only when confused_with is non-empty or there is one especially useful near-synonym contrast; keep it to one concise sentence.
 
-SYNONYMS, RELATED EXPRESSIONS, WORD FAMILY, TYPICAL COLLOCATIONS, CONFUSED WITH and RELATED PHRASAL VERBS must contain ONLY short standalone lexical items separated by commas: no definitions, no explanations, no colons, no semicolons, no full sentences. Use at most 5 items in each list.
+SYNONYMS, ANTONYMS, RELATED EXPRESSIONS, WORD FAMILY, TYPICAL COLLOCATIONS, CONFUSED WITH and RELATED PHRASAL VERBS must contain ONLY short standalone lexical items separated by commas: no definitions, no explanations, no colons, no semicolons, no full sentences. Use at most 5 items in each list.
+
+
+
+CLASSIFICATION: Use Verb for ordinary lexical verbs such as "to blare", "to ponder" or "to dwindle". Keep Phrasal Verb for verb + particle combinations such as "put off". Use Vocabulary primarily for nouns, adjectives and adverbs; populate WORD CLASS for Vocabulary with Noun, Adjective, Adverb or Other. For Verb, keep word_class blank.
+
+FREQUENCY: choose one concise label: Very common, Common, Less common, or Rare.
+NATURALNESS SCORE: rate how idiomatic/natural the target sounds in normal modern English from 1 to 5, where 5 = very natural/idiomatic and 1 = awkward or normally avoided. This is NOT the same as formality. NATURALNESS LABEL should be one short useful explanation such as "Very natural in everyday speech", "Natural, but mainly in formal writing", or "Correct but rather literary".
+NATIVE ALTERNATIVE: only when a more usual or more natural alternative would genuinely help; otherwise blank.
+USEFUL FOR EXAMS: short labels such as "Essay", "Speaking", "CAE/C1", "Formal writing", separated by commas; blank if not especially useful.
+REGISTER LADDER: when useful, show a short progression from informal to neutral to formal, e.g. "kids → children → youngsters"; otherwise blank.
+WHY IS THIS USEFUL?: one concise learner-focused reason to remember the item.
+FALSE FRIEND: only populate for a real Spanish-English false friend or especially dangerous translation trap; otherwise blank.
+MY MISTAKES, PERSONAL DIFFICULTY and CONFIDENCE belong to the learner, so ALWAYS return them as empty strings.
 
 Populate usage_warning whenever register, grammar, connotation, countability, collocation or context could cause a learner mistake. COMMON MISTAKES MUST be non-empty for every non-Grammar/Trick entry: give 1-2 concise, specific learner mistakes or usage traps. For idioms, include a literal-translation/fixed-expression trap when relevant. For connectors, mention punctuation/position/register if useful. For vocabulary, mention a realistic collocation, meaning, register, countability, preposition or false-friend trap. Never invent an unrelated comparison merely to fill it. Never use em dashes as placeholders.
 
@@ -101,6 +114,7 @@ For Grammar / Trick, fully populate trick_category, rule, explanation, examples_
       .join(', ');
     entry.synonyms = cleanLexicalList(entry.synonyms);
     entry.related = cleanLexicalList(entry.related);
+    entry.antonyms = cleanLexicalList(entry.antonyms);
     entry.word_family = cleanLexicalList(entry.word_family);
     entry.typical_collocations = cleanLexicalList(entry.typical_collocations);
     entry.confused_with = cleanLexicalList(entry.confused_with);
