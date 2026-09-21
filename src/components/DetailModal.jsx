@@ -42,7 +42,7 @@ function RelatedPills({ label, value, onRelatedClick }) {
   const items = splitList(value);
   if (!items.length) return null;
   return (
-    <section className="rounded-2xl p-4" style={{ background: '#fff7fa' }}>
+    <section className="rounded-2xl p-4" style={{ background: label === 'CONFUSED WITH' ? '#fff7e8' : label === 'SYNONYMS' ? '#f4efff' : '#fff7fa', border: '1px solid #eadde3' }}>
       <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>
       <div className="flex flex-wrap gap-2 mt-3">
         {items.map((item) => (
@@ -83,8 +83,10 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
     ['Memory trick', record.memory_trick || record.related],
     ['Common mistakes', record.common_mistakes || record.notes],
   ] : [
-    ['Meaning', record.meaning], ['Spanish', record.spanish], ['Natural example', record.example],
-    ['Pattern / structure', record.pattern_structure], ['Common mistakes', record.common_mistakes], ['Notes', record.notes],
+    ['Pattern / structure', record.pattern_structure],
+    ['Word family', record.word_family], ['Typical collocations', record.typical_collocations],
+    ['Best for', record.best_for], ['Avoid overusing', record.avoid_overusing], ['Mini contrast', record.mini_contrast],
+    ['Common mistakes', record.common_mistakes], ['Notes', record.notes],
     ['Separable', record.separable], ['Transitivity', record.transitive],
     ['How common', record.how_common], ['Slang tags', record.slang_tags],
   ];
@@ -127,6 +129,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
             <p className="eyebrow">{record.type}</p>
             <h2 className="page-title" style={{ display: 'inline' }}>{record.word}</h2>
             <PronounceButtons text={record.word} />
+            {record.pronunciation_easy && <p className="mt-2 mb-0 text-sm font-bold" style={{ color: '#8b6577' }}>🗣 {record.pronunciation_easy}</p>}
           </div>
           <div className="flex gap-2">
             <button className="soft-btn p-2" type="button" aria-label="Toggle favourite" onClick={() => onToggleFav(record)} style={{ color: record.is_favourite ? '#b54f75' : '#887583' }}><Heart size={18} fill={record.is_favourite ? 'currentColor' : 'none'} /></button>
@@ -163,6 +166,14 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           </section>
         )}
 
+        {!isTrick && (record.meaning || record.spanish || record.example) && (
+          <div className="grid md:grid-cols-3 gap-4 mt-5">
+            {record.meaning && <section className="rounded-2xl p-4" style={{ background: '#fff0f6', border: '1px solid #f0cad9' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#a05c78' }}>💡 MEANING</p><p className="leading-relaxed mt-2 mb-0">{record.meaning}</p></section>}
+            {record.spanish && <section className="rounded-2xl p-4" style={{ background: '#f2efff', border: '1px solid #dcd4f4' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#6d5d91' }}>🇪🇸 SPANISH</p><p className="leading-relaxed mt-2 mb-0">{record.spanish}</p></section>}
+            {record.example && <section className="rounded-2xl p-4" style={{ background: '#fff8dd', border: '1px solid #ecdda7' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#8a7027' }}>✨ NATURAL EXAMPLE</p><p className="leading-relaxed mt-2 mb-0" style={{ fontStyle: 'italic' }}>{record.example}</p></section>}
+          </div>
+        )}
+
         {record.my_example && !isTrick && (
           <section className="mt-5 rounded-2xl p-4" style={{ background: '#eeeafb', border: '1px solid #d9d0ef' }}>
             <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#665784' }}>MY EXAMPLE ✦</p>
@@ -171,7 +182,14 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
         )}
 
         <div className="grid md:grid-cols-2 gap-5 mt-7">
-          {fields.filter(([, v]) => v).map(([label, value]) => <section key={label} className="rounded-2xl p-4" style={{ background: '#fff7fa' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p><p className="leading-relaxed mt-2 whitespace-pre-line m-0">{value}</p></section>)}
+          {fields.filter(([, v]) => v).map(([label, value], index) => {
+            const tones = [
+              ['#fff7fa','#efd3df','#9a7180'], ['#f7f4ff','#ded6f1','#6e6288'],
+              ['#fffaf0','#eadcaf','#806a30'], ['#f2faf5','#d4e8da','#52705c'],
+            ];
+            const [bg,border,labelColor] = tones[index % tones.length];
+            return <section key={label} className="rounded-2xl p-4" style={{ background: bg, border: `1px solid ${border}` }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: labelColor }}>{label.toUpperCase()}</p><p className="leading-relaxed mt-2 whitespace-pre-line m-0">{value}</p></section>;
+          })}
           {!isTrick && <RelatedPills label="SYNONYMS" value={record.synonyms} onRelatedClick={onRelatedClick} />}
           {!isTrick && <RelatedPills label="RELATED EXPRESSIONS" value={record.related} onRelatedClick={onRelatedClick} />}
           {!isTrick && <RelatedPills label="CONFUSED WITH" value={record.confused_with} onRelatedClick={onRelatedClick} />}

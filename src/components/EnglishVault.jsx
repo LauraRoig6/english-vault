@@ -53,8 +53,8 @@ export default function EnglishVault({ session, onSignOut }) {
   };
 
   const openCategory = (type) => {
-    setCurrentView('expressions');
-    setLibrarySpecificType(type);
+    setCurrentView(type === 'Idiom' ? 'idioms' : 'expressions');
+    setLibrarySpecificType(type === 'Idiom' ? '' : type);
     setLibraryTagFilter('');
     setLibraryTopicFilter('');
     setLibraryExtraFilter(null);
@@ -87,7 +87,8 @@ export default function EnglishVault({ session, onSignOut }) {
       // Navigate to that type's library section
       const map = { 'Vocabulary': 'vocabulary', 'Slang': 'slang', 'Phrasal Verb': 'phrasal', 'Connector / Linker': 'connectors', 'Grammar / Trick': 'tricks' };
       if (map[value]) return openView(map[value]);
-      if (['Expression', 'Collocation', 'Idiom'].includes(value)) return openCategory(value);
+      if (value === 'Idiom') return openView('idioms');
+      if (['Expression', 'Collocation'].includes(value)) return openCategory(value);
       return;
     }
     // level, register, variety, status
@@ -150,7 +151,8 @@ export default function EnglishVault({ session, onSignOut }) {
       'Grammar / Trick': 'tricks',
     };
     if (map[type]) return { view: map[type], category: null };
-    if (['Expression', 'Collocation', 'Idiom'].includes(type)) return { view: 'expressions', category: type };
+    if (type === 'Idiom') return { view: 'idioms', category: null };
+    if (['Expression', 'Collocation'].includes(type)) return { view: 'expressions', category: type };
     return null;
   };
 
@@ -295,7 +297,7 @@ export default function EnglishVault({ session, onSignOut }) {
               onChange={(e) => {
                 setSearch(e.target.value);
                 // Auto-jump to library on first keystroke so results are visible
-                if (e.target.value && !['vocabulary', 'slang', 'phrasal', 'expressions', 'connectors', 'tricks', 'favourites'].includes(currentView)) {
+                if (e.target.value && !['vocabulary', 'slang', 'phrasal', 'expressions', 'idioms', 'connectors', 'tricks', 'favourites'].includes(currentView)) {
                   setCurrentView('vocabulary');
                   setLibrarySpecificType('');
                 }
@@ -342,7 +344,7 @@ export default function EnglishVault({ session, onSignOut }) {
           />
         )}
 
-        {['vocabulary', 'slang', 'phrasal', 'expressions', 'connectors', 'tricks', 'favourites'].includes(currentView) && (
+        {['vocabulary', 'slang', 'phrasal', 'expressions', 'idioms', 'connectors', 'tricks', 'favourites'].includes(currentView) && (
           <LibraryView
             records={records}
             currentView={currentView}

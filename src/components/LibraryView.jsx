@@ -20,7 +20,8 @@ const typeMap = {
   vocabulary: 'Vocabulary',
   slang: 'Slang',
   phrasal: 'Phrasal Verb',
-  expressions: ['Expression', 'Collocation', 'Idiom'],
+  expressions: ['Expression', 'Collocation'],
+  idioms: 'Idiom',
   connectors: 'Connector / Linker',
   tricks: 'Grammar / Trick',
 };
@@ -29,7 +30,8 @@ const headings = {
   vocabulary: ['Vocabulary', 'Words worth keeping close.'],
   slang: ['Slang', 'Natural, modern and colloquial English.'],
   phrasal: ['Phrasal Verbs', 'Explore meaning, usage and related verbs.'],
-  expressions: ['Expressions, Collocations & Idioms', 'Natural phrases, fixed combinations and idiomatic language.'],
+  expressions: ['Expressions & Collocations', 'Natural phrases and fixed word combinations.'],
+  idioms: ['Idioms', 'Fixed expressions whose meaning is more than the literal words.'],
   connectors: ['Connectors / Linkers', 'Words and phrases that connect ideas and organise discourse.'],
   tricks: ['Tricks', 'Your personal grammar and usage handbook.'],
   favourites: ['Favourites', 'Your saved essentials.'],
@@ -73,7 +75,9 @@ function fuzzyTokenMatch(token, candidate) {
   if (!token || !candidate) return false;
   const t = token.toLowerCase();
   const c = candidate.toLowerCase();
-  if (c.includes(t) || t.includes(c)) return true;
+  if (c.includes(t)) return true;
+  // Do not let tiny words such as “a”, “to” or “on” create false fuzzy matches.
+  if (t.length < 3 || c.length < 3) return t === c;
   const maxDist = t.length <= 4 ? 1 : t.length <= 8 ? 2 : 3;
   return editDistance(t, c) <= maxDist;
 }
@@ -93,6 +97,17 @@ function fuzzyWordMatch(word, query) {
   const wordText = String(word || '').toLowerCase();
   const wordTokens = wordText.match(/[a-zà-ÿ'-]+/gi) || [];
   return qTokens.every((q) => wordText.includes(q) || wordTokens.some((w) => fuzzyTokenMatch(q, w)));
+}
+
+function smartSearchMatch(record, query) {
+  const raw = String(query || '').trim();
+  if (!raw) return true;
+  const q = raw.toLowerCase();
+  const exactMeta = [record.level, record.register, record.variety, record.status || 'New', record.type, record.topic]
+    .filter(Boolean).some((v) => String(v).toLowerCase() === q);
+  const exactTag = String(record.tags || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean).includes(q);
+  if (exactMeta || exactTag) return true;
+  return fuzzyWordMatch(record.word, raw);
 }
 
 // Highlight exact hits and close fuzzy word hits.
@@ -175,17 +190,23 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick })
         </button>
       </div>
       <div className="entry-chips flex gap-2 flex-wrap">
-        <Chip kind="type">{record.type}</Chip>
-        <Chip kind="status">{record.status || 'New'}</Chip>
-        {record.level && <Chip kind="level">{record.level}</Chip>}
-        {record.register && <Chip kind="register">{record.register}</Chip>}
-        {record.variety && <Chip kind="variety">{record.variety}</Chip>}
+        <Chip kind="type" onClick={(e) => { e.stopPropagation(); onTagClick(record.type, 'type'); }}>{record.type}</Chip>
+        <Chip kind="status" onClick={(e) => { e.stopPropagation(); onTagClick(record.status || 'New', 'status'); }}>{record.status || 'New'}</Chip>
+        {record.level && <Chip kind="level" onClick={(e) => { e.stopPropagation(); onTagClick(record.level, 'level'); }}>{record.level}</Chip>}
+        {record.register && <Chip kind="register" onClick={(e) => { e.stopPropagation(); onTagClick(record.register, 'register'); }}>{record.register}</Chip>}
+        {record.variety && <Chip kind="variety" onClick={(e) => { e.stopPropagation(); onTagClick(record.variety, 'variety'); }}>{record.variety}</Chip>}
         {record.topic && <Chip kind="topic" onClick={(e) => { e.stopPropagation(); onTagClick(record.topic, 'topic'); }}>{record.topic}</Chip>}
         {tags.map((t, i) => (
           <Chip key={i} kind="tag" onClick={(e) => { e.stopPropagation(); onTagClick(t, 'tag'); }}>{t}</Chip>
         ))}
       </div>
       <h3 className="entry-word"><Highlight text={record.word} query={query} /></h3>
+      {(record.pronunciation_easy || record.spanish) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', margin: '-2px 0 10px' }}>
+          {record.pronunciation_easy && <span style={{ background: '#f2efff', border: '1px solid #ddd5f2', color: '#6c5f89', padding: '5px 9px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700 }}>🗣 {record.pronunciation_easy}</span>}
+          {record.spanish && <span style={{ background: '#fff4e7', border: '1px solid #ead8bd', color: '#806a45', padding: '5px 9px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700 }}>🇪🇸 {record.spanish}</span>}
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
         <button
           type="button"
@@ -270,7 +291,7 @@ export default function LibraryView({
       if (key === 'status') r = r.filter((x) => (x.status || 'New') === value);
       else r = r.filter((x) => (x[key] || '') === value);
     }
-    if (search) r = r.filter((x) => fuzzyWordMatch(x.word, search));
+    if (search && search.trim()) r = r.filter((x) => smartSearchMatch(x, search));
 
     Object.entries(filters).forEach(([k, v]) => {
       if (!v) return;
@@ -306,7 +327,12 @@ export default function LibraryView({
 
   const handleTagClick = (value, kind) => {
     if (kind === 'topic') setTopicFilter(value);
-    else onOpenTag(value);
+    else if (kind === 'tag') onOpenTag(value);
+    else if (kind === 'type') {
+      if (value === 'Idiom') onNavigate('idioms');
+      else if (['Expression', 'Collocation'].includes(value)) onOpenCategory(value);
+      else { const map = { 'Vocabulary': 'vocabulary', 'Slang': 'slang', 'Phrasal Verb': 'phrasal', 'Connector / Linker': 'connectors', 'Grammar / Trick': 'tricks' }; if (map[value]) onNavigate(map[value]); }
+    } else if (setExtraFilter) setExtraFilter({ key: kind, value });
   };
 
   const mobileCats = [
@@ -315,7 +341,7 @@ export default function LibraryView({
     { id: 'phrasal', label: 'Phrasal Verbs', icon: Link2 },
     { id: 'expression', label: 'Expressions', icon: Quote },
     { id: 'collocation', label: 'Collocations', icon: Puzzle },
-    { id: 'idiom', label: 'Idioms', icon: Lightbulb },
+    { id: 'idioms', label: 'Idioms', icon: Lightbulb },
     { id: 'connectors', label: 'Connectors', icon: GitBranch },
     { id: 'tricks', label: 'Tricks', icon: Brain },
     { id: 'favourites', label: 'Favourites', icon: Heart },
@@ -332,14 +358,14 @@ export default function LibraryView({
       <nav className="mobile-category-menu" aria-label="Library categories">
         {mobileCats.map((c) => {
           const Icon = c.icon;
-          const isActive = (['expression', 'collocation', 'idiom'].includes(c.id) && librarySpecificType && librarySpecificType.toLowerCase() === c.id) || currentView === c.id;
+          const isActive = (['expression', 'collocation'].includes(c.id) && librarySpecificType && librarySpecificType.toLowerCase() === c.id) || currentView === c.id;
           return (
             <button
               key={c.id}
               type="button"
               className={isActive ? 'active' : ''}
               onClick={() => {
-                if (['expression', 'collocation', 'idiom'].includes(c.id)) {
+                if (['expression', 'collocation'].includes(c.id)) {
                   onOpenCategory(c.id[0].toUpperCase() + c.id.slice(1));
                 } else {
                   onNavigate(c.id);

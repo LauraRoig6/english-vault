@@ -21,6 +21,10 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
       almost: records.filter((r) => r.status === 'Almost learnt').length,
       mastered: records.filter((r) => r.status === 'Mastered' || r.is_known).length,
       addedWeek: records.filter((r) => new Date(r.created_at || 0).getTime() >= weekAgo).length,
+      needsAttention: records.filter((r) => {
+        if (r.type === 'Grammar / Trick') return !(r.rule || r.transitive) || !(r.explanation || r.how_common) || !(r.common_mistakes || r.notes);
+        return !r.meaning || !r.spanish || !r.example || !r.common_mistakes || !r.pronunciation_easy;
+      }).length,
     };
   }, [records]);
 
@@ -135,9 +139,9 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
       <section className="mt-8">
         <p className="eyebrow">Your progress</p>
         <h2 className="section-heading">Stats</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mt-4">
           {[
-            ['Total', records.length], ['Learning', stats.learning], ['Almost learnt', stats.almost], ['Mastered', stats.mastered], ['Added this week', stats.addedWeek],
+            ['Total', records.length], ['Learning', stats.learning], ['Almost learnt', stats.almost], ['Mastered', stats.mastered], ['Added this week', stats.addedWeek], ['Needs attention', stats.needsAttention],
           ].map(([label, value]) => (
             <article key={label} className="card p-4">
               <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>

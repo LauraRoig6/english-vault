@@ -1,0 +1,32 @@
+ENGLISH VAULT · SMART LEARNING UPDATE (21/09/2026)
+
+CAMBIOS PRINCIPALES
+- Autofill IA: Common Mistakes obligatorio en entradas léxicas, listas más limpias y Confused With mucho más estricto.
+- Nueva pronunciación fácil escrita "como en español" (no IPA), con variantes UK/US si hace falta.
+- Nuevos campos: Word Family, Typical Collocations, Best For, Avoid Overusing y Mini Contrast.
+- Copy template incluye automáticamente la palabra ya escrita y todos los campos nuevos.
+- Guardado de WORD / EXPRESSION siempre en minúsculas.
+- Related entries: evita relaciones falsas por compartir una sola palabra genérica.
+- Búsqueda: una palabra busca solo WORD / EXPRESSION (con tolerancia a pequeños errores). C1, Formal, Idiom, etc. funcionan como búsquedas de metadatos.
+- Chips de Level/Register/Variety/Status/Type clicables desde las tarjetas.
+- Idioms tiene ahora sección propia en la barra lateral. Expressions & Collocations queda separado.
+- Tarjetas/fichas más visuales, con bloques pastel para significado, español, ejemplo y detalles.
+- Stats al final de Home + Needs attention.
+- Las funciones anteriores (Supabase, IA, Surprise, Practice, Export/Import, PWA) se mantienen.
+
+PRUEBAS RECOMENDADAS
+1. Escribe TO SIT ON THE FENCE y comprueba que el campo pasa a minúsculas.
+2. Pulsa Autofill: Common Mistakes debe rellenarse; Confused With puede quedar vacío si no hay una confusión real.
+3. Comprueba EASY PRONUNCIATION (ej. /.../ estilo español, no IPA).
+4. Pulsa Copy template: debe copiar WORD / EXPRESSION ya rellenado y los campos nuevos.
+5. Busca banana: solo deben aparecer coincidencias del nombre (y no el resto de la biblioteca).
+6. Busca bananna: debe encontrar banana si existe.
+7. Busca C1: deben aparecer todas las entradas C1.
+8. Pulsa un chip C1 directamente desde una tarjeta: debe filtrar por C1.
+9. Mira la barra lateral: debe aparecer Idioms como apartado propio y Expressions & Collocations separado.
+10. Comprueba Home al final: Stats + Needs attention.
+11. Abre una ficha: debe verse más visual y mostrar pronunciación fácil si existe.
+12. Comprueba que tus entradas antiguas siguen intactas.
+
+NOTA
+No se modifica la tabla de Supabase: los campos nuevos viven dentro del JSON de cada entrada. No debería borrarse ninguna entrada existente.

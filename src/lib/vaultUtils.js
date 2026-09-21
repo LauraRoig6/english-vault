@@ -33,11 +33,12 @@ export function relatedScore(a, b) {
 
   let score = 0;
   let strongMatch = false;
-  const at = tokenSet(aw);
-  const bt = tokenSet(bw);
-  for (const t of at) {
-    if (bt.has(t)) { score += 4; strongMatch = true; }
-  }
+  const stop = new Set(['someone','somebody','something','your','you','their','them','with','from','into','about','have','make','take','give','get','lose','put']);
+  const at = new Set([...tokenSet(aw)].filter((t) => !stop.has(t)));
+  const bt = new Set([...tokenSet(bw)].filter((t) => !stop.has(t)));
+  const shared = [...at].filter((t) => bt.has(t));
+  // A single generic shared word must not create a fake relationship.
+  if (shared.length >= 2) { score += shared.length * 3; strongMatch = true; }
 
   const aRelated = new Set([
     ...splitList(a?.synonyms), ...splitList(a?.related), ...splitList(a?.confused_with), ...splitList(a?.similar_expressions),
@@ -65,7 +66,7 @@ export function findSimilarEntries(records = [], draft = {}, excludeId = null, l
   return records
     .filter((r) => r.__backendId !== excludeId)
     .map((r) => ({ record: r, score: relatedScore(draft, r) }))
-    .filter((x) => x.score >= 4)
+    .filter((x) => x.score >= 6)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((x) => x.record);

@@ -6,7 +6,8 @@ const navItems = [
   { id: 'vocabulary', label: 'Vocabulary', icon: LibraryBig },
   { id: 'slang', label: 'Slang', icon: MessageCircle },
   { id: 'phrasal', label: 'Phrasal Verbs', icon: Link2 },
-  { id: 'expressions', label: 'Expressions, Collocations & Idioms', icon: Sparkles },
+  { id: 'expressions', label: 'Expressions & Collocations', icon: Sparkles },
+  { id: 'idioms', label: 'Idioms', icon: Sparkles },
   { id: 'connectors', label: 'Connectors / Linkers', icon: GitBranch },
   { id: 'tricks', label: 'Tricks', icon: Brain },
   { id: 'practice', label: 'Practice', icon: GraduationCap },
@@ -39,6 +40,7 @@ export default function Sidebar({ currentView, onNavigate }) {
           );
         })}
       </nav>
+      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v3 · smart learning update</p>
     </aside>
   );
 }

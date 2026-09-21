@@ -8,14 +8,14 @@ const typeOptions = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collo
 const emptyForm = {
   type: 'Vocabulary', word: '', meaning: '', spanish: '', example: '', my_example: '',
   register: '', level: '', variety: '', topic: '', tags: '', notes: '',
-  synonyms: '', related: '', pattern_structure: '', confused_with: '', usage_warning: '', separable: '', transitive: '', similar_expressions: '',
+  synonyms: '', related: '', pattern_structure: '', confused_with: '', usage_warning: '', pronunciation_easy: '', word_family: '', typical_collocations: '', best_for: '', avoid_overusing: '', mini_contrast: '', separable: '', transitive: '', similar_expressions: '',
   how_common: '', offensive_warning: '', slang_tags: '',
   trick_category: '', rule: '', explanation: '', examples_list: '', exceptions: '', memory_trick: '', common_mistakes: '',
   is_favourite: false, is_difficult: false, is_known: false, needs_review: true,
 };
 
-function copyTemplate() {
-  return `NEW DISCOVERY\n\nWORD / EXPRESSION:\nTYPE:\nMEANING IN ENGLISH:\nSPANISH:\nNATURAL EXAMPLE:\nMY EXAMPLE:\nREGISTER:\nLEVEL:\nVARIETY:\nTOPIC:\nTAGS:\nSYNONYMS:\nRELATED EXPRESSIONS:\nPHRASAL: SEPARABLE?:\nPHRASAL: TRANSITIVITY:\nRELATED PHRASAL VERBS:\nSLANG: HOW COMMON?:\nUSAGE WARNING:\nSLANG TAGS:\nTRICK CATEGORY:\nRULE:\nEXPLANATION:\nEXAMPLES:\nEXCEPTIONS:\nMEMORY TRICK:\nCOMMON MISTAKES:\nNOTES:`;
+function copyTemplate(word = '') {
+  return `NEW DISCOVERY\n\nWORD / EXPRESSION: ${String(word || '').trim().toLowerCase()}\nTYPE:\nMEANING IN ENGLISH:\nSPANISH:\nEASY PRONUNCIATION:\nNATURAL EXAMPLE:\nMY EXAMPLE:\nREGISTER:\nLEVEL:\nVARIETY:\nTOPIC:\nTAGS:\nSYNONYMS:\nRELATED EXPRESSIONS:\nWORD FAMILY:\nTYPICAL COLLOCATIONS:\nPATTERN / STRUCTURE:\nCONFUSED WITH:\nMINI CONTRAST:\nBEST FOR:\nAVOID OVERUSING:\nPHRASAL: SEPARABLE?:\nPHRASAL: TRANSITIVITY:\nRELATED PHRASAL VERBS:\nSLANG: HOW COMMON?:\nUSAGE WARNING:\nSLANG TAGS:\nTRICK CATEGORY:\nRULE:\nEXPLANATION:\nEXAMPLES:\nEXCEPTIONS:\nMEMORY TRICK:\nCOMMON MISTAKES:\nNOTES:`;
 }
 
 export default function EntryModal({ onClose, onSave, editingRecord, prefillRecord, existingRecords }) {
@@ -56,6 +56,12 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
         usage_warning: editingRecord.usage_warning || (!isTrick ? editingRecord.offensive_warning || '' : ''),
         pattern_structure: editingRecord.pattern_structure || '',
         confused_with: editingRecord.confused_with || '',
+        pronunciation_easy: editingRecord.pronunciation_easy || '',
+        word_family: editingRecord.word_family || '',
+        typical_collocations: editingRecord.typical_collocations || '',
+        best_for: editingRecord.best_for || '',
+        avoid_overusing: editingRecord.avoid_overusing || '',
+        mini_contrast: editingRecord.mini_contrast || '',
       });
     } else if (prefillRecord) {
       const allowed = ['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
@@ -83,10 +89,12 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
     }
     const isTrick = form.type === 'Grammar / Trick';
     const record = {
-      type: form.type, word: form.word.trim(), meaning: form.meaning,
+      type: form.type, word: form.word.trim().toLowerCase(), meaning: form.meaning,
       spanish: form.spanish, example: form.example, my_example: form.my_example,
       register: form.register, level: form.level, variety: form.variety, topic: form.topic, tags: form.tags,
       pattern_structure: form.pattern_structure, confused_with: form.confused_with, usage_warning: form.usage_warning,
+      pronunciation_easy: form.pronunciation_easy, word_family: form.word_family, typical_collocations: form.typical_collocations,
+      best_for: form.best_for, avoid_overusing: form.avoid_overusing, mini_contrast: form.mini_contrast,
       is_favourite: form.is_favourite, is_difficult: form.is_difficult, is_known: form.is_known, needs_review: form.needs_review,
       status: form.is_known ? 'Mastered' : (form.status || 'New'),
       separable: isTrick ? form.trick_category : form.separable,
@@ -131,7 +139,13 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       'TAGS': 'tags',
       'SYNONYMS': 'synonyms',
       'RELATED EXPRESSIONS': 'related',
+      'EASY PRONUNCIATION': 'pronunciation_easy',
+      'WORD FAMILY': 'word_family',
+      'TYPICAL COLLOCATIONS': 'typical_collocations',
       'PATTERN / STRUCTURE': 'pattern_structure',
+      'MINI CONTRAST': 'mini_contrast',
+      'BEST FOR': 'best_for',
+      'AVOID OVERUSING': 'avoid_overusing',
       'CONFUSED WITH': 'confused_with',
       'PHRASAL: SEPARABLE?': 'separable',
       'PHRASAL: TRANSITIVITY': 'transitive',
@@ -181,7 +195,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
 
   const handleCopyTemplate = async () => {
     try {
-      await navigator.clipboard.writeText(copyTemplate());
+      await navigator.clipboard.writeText(copyTemplate(form.word));
       setCopyStatus('Template copied! Paste it into ChatGPT ✨');
     } catch {
       setCopyStatus('Copy failed — select the text manually.');
@@ -298,6 +312,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
           <div className="grid md:grid-cols-2 gap-4 mt-4">
             <div className="field md:col-span-2"><label>MEANING IN ENGLISH</label><textarea required={!isTrick} value={form.meaning} onChange={(e) => set('meaning', e.target.value)} /></div>
             <div className="field"><label>SPANISH</label><input value={form.spanish} onChange={(e) => set('spanish', e.target.value)} /></div>
+            {!isTrick && <div className="field"><label>EASY PRONUNCIATION</label><input placeholder="e.g. /eskédiul/" value={form.pronunciation_easy} onChange={(e) => set('pronunciation_easy', e.target.value)} /></div>}
             <div className="field"><label>NATURAL EXAMPLE</label><input value={form.example} onChange={(e) => set('example', e.target.value)} /></div>
             <div className="field"><label>MY EXAMPLE</label><textarea style={{ minHeight: '52px' }} value={form.my_example} onChange={(e) => set('my_example', e.target.value)} /></div>
             <div className="field"><label>REGISTER</label>
@@ -322,8 +337,13 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             <div className="field md:col-span-2"><label>TAGS</label><input placeholder="Separate tags with commas" value={form.tags} onChange={(e) => set('tags', e.target.value)} /></div>
             <div className="field"><label>SYNONYMS</label><input value={form.synonyms} onChange={(e) => set('synonyms', e.target.value)} /></div>
             <div className="field"><label>RELATED EXPRESSIONS</label><input value={form.related} onChange={(e) => set('related', e.target.value)} /></div>
+            {!isTrick && <div className="field"><label>WORD FAMILY</label><input placeholder="e.g. confuse, confusion, confused" value={form.word_family} onChange={(e) => set('word_family', e.target.value)} /></div>}
+            {!isTrick && <div className="field"><label>TYPICAL COLLOCATIONS</label><input placeholder="e.g. deeply confused, cause confusion" value={form.typical_collocations} onChange={(e) => set('typical_collocations', e.target.value)} /></div>}
             <div className="field md:col-span-2"><label>PATTERN / STRUCTURE</label><input placeholder="e.g. prevent sb from doing sth" value={form.pattern_structure} onChange={(e) => set('pattern_structure', e.target.value)} /></div>
-            <div className="field md:col-span-2"><label>CONFUSED WITH</label><input placeholder="e.g. sensible ≠ sensitive" value={form.confused_with} onChange={(e) => set('confused_with', e.target.value)} /></div>
+            <div className="field md:col-span-2"><label>CONFUSED WITH</label><input placeholder="Only genuinely confusable words/expressions" value={form.confused_with} onChange={(e) => set('confused_with', e.target.value)} /></div>
+            {!isTrick && <div className="field md:col-span-2"><label>MINI CONTRAST</label><input placeholder="Brief difference from a genuinely similar item" value={form.mini_contrast} onChange={(e) => set('mini_contrast', e.target.value)} /></div>}
+            {!isTrick && <div className="field"><label>BEST FOR</label><input placeholder="e.g. formal writing, conversation" value={form.best_for} onChange={(e) => set('best_for', e.target.value)} /></div>}
+            {!isTrick && <div className="field"><label>AVOID OVERUSING</label><input placeholder="Short naturalness note, if useful" value={form.avoid_overusing} onChange={(e) => set('avoid_overusing', e.target.value)} /></div>}
             {!isTrick && <div className="field md:col-span-2"><label>USAGE WARNING</label><textarea value={form.usage_warning} onChange={(e) => set('usage_warning', e.target.value)} /></div>}
 
             {isPhrasal && <>
