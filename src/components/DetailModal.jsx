@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { X, Heart, Volume2, Share2, Sparkles, Languages, GraduationCap, AlertTriangle, ArrowUpRight } from 'lucide-react';
-import { splitList } from '../lib/vaultUtils';
+import { X, Heart, Volume2, Share2, Sparkles, Languages, GraduationCap, AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { splitList, normalizeEntryText } from '../lib/vaultUtils';
 
 function speak(text, lang) {
   if (!text) return;
@@ -38,35 +38,41 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
-function RelatedPills({ label, value, onRelatedClick }) {
+function RelatedPills({ label, value, onRelatedClick, allRecords = [] }) {
   const items = splitList(value);
   if (!items.length) return null;
+  const existing = new Set(allRecords.map((r) => normalizeEntryText(r.word)));
   return (
     <section className="rounded-2xl p-4" style={{ background: label === 'CONFUSED WITH' ? '#fff7e8' : label === 'SYNONYMS' ? '#f4efff' : '#fff7fa', border: '1px solid #eadde3' }}>
       <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>
       <div className="flex flex-wrap gap-2 mt-3">
-        {items.map((item) => (
-          <button key={item} type="button" className="soft-btn text-xs" style={{ padding: '7px 10px' }} onClick={() => onRelatedClick?.(item)}>
-            {item} <ArrowUpRight size={12} style={{ display: 'inline', marginLeft: 3 }} />
-          </button>
-        ))}
+        {items.map((item) => {
+          const inVault = existing.has(normalizeEntryText(item));
+          return (
+            <button key={item} type="button" className={`related-pill ${inVault ? 'in-vault' : 'not-in-vault'}`} onClick={() => onRelatedClick?.(item)} title={inVault ? 'Open saved entry' : 'Add this to your Vault'}>
+              {inVault && <Check size={12} />} {item} <ArrowUpRight size={12} />
+            </button>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz }) {
+export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz, allRecords = [], onStatusChange }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [contextExamples, setContextExamples] = useState(null);
   const [spanishHelp, setSpanishHelp] = useState(null);
   const [helpLoading, setHelpLoading] = useState('');
   const [helpError, setHelpError] = useState('');
+  const [spanishSlide, setSpanishSlide] = useState(0);
+  const [statusOpen, setStatusOpen] = useState(false);
   const shareRef = useRef(null);
 
   if (!record) return null;
 
   const meta = [
-    ['type', record.type], ['status', record.status || 'New'], ['level', record.level], ['register', record.register],
+    ['type', record.type], ['level', record.level], ['register', record.register],
     ['variety', record.variety], ['topic', record.topic],
     ...String(record.tags || '').split(',').map((x) => ['tag', x.trim()]),
   ].filter(([, v]) => v);
@@ -100,7 +106,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || 'Could not generate this help.');
-      if (mode === 'contexts') setContextExamples(data.examples || []); else setSpanishHelp(data);
+      if (mode === 'contexts') setContextExamples(data.examples || []); else { setSpanishHelp(data); setSpanishSlide(0); }
     } catch (err) { setHelpError(err?.message || 'Could not generate this help.'); }
     finally { setHelpLoading(''); }
   };
@@ -138,11 +144,25 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-5">
+        <div className="flex flex-wrap gap-2 mt-5 items-center">
           {meta.map(([k, v], i) => {
-            const clickable = onTagClick && ['tag', 'topic', 'level', 'register', 'variety', 'status', 'type'].includes(k);
+            const clickable = onTagClick && ['tag', 'topic', 'level', 'register', 'variety', 'type'].includes(k);
             return <span key={i} onClick={clickable ? () => onTagClick(v, k) : undefined} style={clickable ? { cursor: 'pointer', display: 'inline-block' } : {}} title={clickable ? `Filter by ${v}` : undefined}><Chip kind={k}>{v}</Chip></span>;
           })}
+          <div className="status-picker">
+            <button type="button" className="chip chip-status status-picker-button" onClick={() => setStatusOpen((v) => !v)} title="Change learning status">
+              {record.status || 'New'} ▾
+            </button>
+            {statusOpen && (
+              <div className="status-picker-menu">
+                {['New', 'Learning', 'Almost learnt', 'Mastered'].map((status) => (
+                  <button key={status} type="button" className={(record.status || 'New') === status ? 'active' : ''} onClick={() => { onStatusChange?.(record, status); setStatusOpen(false); }}>
+                    {status}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {usageWarning && (
@@ -162,7 +182,29 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
             </div>
             {helpError && <p className="text-sm mt-3" style={{ color: '#9d4f6e' }}>{helpError}</p>}
             {contextExamples && contextExamples.length > 0 && <div className="grid md:grid-cols-3 gap-3 mt-4">{contextExamples.map((ex, i) => <div key={i} className="rounded-xl p-3" style={{ background: '#fff', border: '1px solid #eadde3' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{ex.context}</p><p className="mt-2 mb-1" style={{ lineHeight: 1.5 }}>{ex.sentence}</p><p className="text-xs m-0" style={{ color: '#7b6d75', lineHeight: 1.45 }}>{ex.why_it_fits}</p></div>)}</div>}
-            {spanishHelp && <div className="mt-4 rounded-xl p-4" style={{ background: '#fff', border: '1px solid #eadde3' }}><p className="m-0" style={{ lineHeight: 1.6 }}>{spanishHelp.explanation}</p>{spanishHelp.nuance && <p className="mt-3 mb-0 text-sm"><strong>Matiz:</strong> {spanishHelp.nuance}</p>}{spanishHelp.memory_tip && <p className="mt-2 mb-0 text-sm"><strong>Truco:</strong> {spanishHelp.memory_tip}</p>}</div>}
+            {spanishHelp && (() => {
+              const slides = [
+                spanishHelp.explanation && { title: 'Qué significa', icon: '💡', text: spanishHelp.explanation },
+                spanishHelp.nuance && { title: 'El matiz', icon: '🎨', text: spanishHelp.nuance },
+                spanishHelp.memory_tip && { title: 'Cómo recordarlo', icon: '🧠', text: spanishHelp.memory_tip },
+              ].filter(Boolean);
+              const slide = slides[Math.min(spanishSlide, Math.max(0, slides.length - 1))];
+              if (!slide) return null;
+              return (
+                <div className="spanish-carousel mt-4">
+                  <div className="spanish-carousel-top">
+                    <span className="spanish-carousel-icon">{slide.icon}</span>
+                    <div><p className="eyebrow m-0">Explícamelo en español</p><h3 className="spanish-carousel-title">{slide.title}</h3></div>
+                  </div>
+                  <p className="spanish-carousel-text">{slide.text}</p>
+                  <div className="spanish-carousel-nav">
+                    <button type="button" className="carousel-arrow" onClick={() => setSpanishSlide((i) => (i - 1 + slides.length) % slides.length)} aria-label="Anterior"><ChevronLeft size={18} /></button>
+                    <div className="carousel-dots">{slides.map((_, i) => <button key={i} type="button" className={i === spanishSlide ? 'active' : ''} onClick={() => setSpanishSlide(i)} aria-label={`Diapositiva ${i + 1}`} />)}</div>
+                    <button type="button" className="carousel-arrow" onClick={() => setSpanishSlide((i) => (i + 1) % slides.length)} aria-label="Siguiente"><ChevronRight size={18} /></button>
+                  </div>
+                </div>
+              );
+            })()}
           </section>
         )}
 
@@ -190,10 +232,10 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
             const [bg,border,labelColor] = tones[index % tones.length];
             return <section key={label} className="rounded-2xl p-4" style={{ background: bg, border: `1px solid ${border}` }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: labelColor }}>{label.toUpperCase()}</p><p className="leading-relaxed mt-2 whitespace-pre-line m-0">{value}</p></section>;
           })}
-          {!isTrick && <RelatedPills label="SYNONYMS" value={record.synonyms} onRelatedClick={onRelatedClick} />}
-          {!isTrick && <RelatedPills label="RELATED EXPRESSIONS" value={record.related} onRelatedClick={onRelatedClick} />}
-          {!isTrick && <RelatedPills label="CONFUSED WITH" value={record.confused_with} onRelatedClick={onRelatedClick} />}
-          {!isTrick && <RelatedPills label="RELATED PHRASAL VERBS" value={record.similar_expressions} onRelatedClick={onRelatedClick} />}
+          {!isTrick && <RelatedPills label="SYNONYMS" value={record.synonyms} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
+          {!isTrick && <RelatedPills label="RELATED EXPRESSIONS" value={record.related} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
+          {!isTrick && <RelatedPills label="CONFUSED WITH" value={record.confused_with} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
+          {!isTrick && <RelatedPills label="RELATED PHRASAL VERBS" value={record.similar_expressions} onRelatedClick={onRelatedClick} allRecords={allRecords} />}
         </div>
 
         <div className="mt-7 pt-5 border-t flex flex-wrap justify-between gap-3" style={{ borderColor: '#e8d8df' }}>

@@ -110,6 +110,22 @@ function smartSearchMatch(record, query) {
   return fuzzyWordMatch(record.word, raw);
 }
 
+function attentionReasons(record) {
+  const reasons = [];
+  if (record.type === 'Grammar / Trick') {
+    if (!(record.rule || record.transitive)) reasons.push('Missing rule');
+    if (!(record.explanation || record.how_common)) reasons.push('Missing explanation');
+    if (!(record.common_mistakes || record.notes)) reasons.push('Missing common mistakes');
+    return reasons;
+  }
+  if (!record.meaning) reasons.push('Missing meaning');
+  if (!record.spanish) reasons.push('Missing Spanish');
+  if (!record.example) reasons.push('Missing example');
+  if (!record.pronunciation_easy) reasons.push('Missing pronunciation');
+  if (!record.common_mistakes) reasons.push('Missing common mistakes');
+  return reasons;
+}
+
 // Highlight exact hits and close fuzzy word hits.
 function Highlight({ text, query }) {
   if (!query || !text) return <>{text}</>;
@@ -144,7 +160,7 @@ function fuzzyMatch(record, query) {
   return tokens.every((t) => fields.some((field) => textHasFuzzyToken(field, t)));
 }
 
-function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick }) {
+function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, showAttention }) {
   const [confirmDel, setConfirmDel] = useState(false);
   const tags = String(record.tags || '').split(',').map((x) => x.trim()).filter(Boolean);
   const isTrick = record.type === 'Grammar / Trick';
@@ -244,6 +260,7 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick })
       <div className="entry-bottom flex flex-wrap gap-2 mt-4">
         {record.is_difficult && <Chip kind="type">Difficult</Chip>}
         {record.needs_review && <Chip kind="level">Review</Chip>}
+        {showAttention && attentionReasons(record).map((reason) => <span key={reason} className="attention-reason">{reason}</span>)}
       </div>
     </article>
   );
@@ -255,7 +272,7 @@ export default function LibraryView({
   extraFilter, setExtraFilter,
   search, onOpenDetail, onToggleFav, onDelete, onNavigate, onOpenCategory, onExport, onImport, onOpenTag,
 }) {
-  const [filters, setFilters] = useState({ level: '', register: '', variety: '', status: '', topic: '', tags: '' });
+  const [filters, setFilters] = useState({ type: '', level: '', register: '', variety: '', status: '', topic: '', tags: '' });
   const [sort, setSort] = useState('newest');
   const [pills, setPills] = useState({ favourite: false, difficult: false, reviewing: false });
 
@@ -289,6 +306,10 @@ export default function LibraryView({
     if (extraFilter && extraFilter.value) {
       const { key, value } = extraFilter;
       if (key === 'status') r = r.filter((x) => (x.status || 'New') === value);
+      else if (key === 'needs_attention') r = r.filter((x) => {
+        if (x.type === 'Grammar / Trick') return !(x.rule || x.transitive) || !(x.explanation || x.how_common) || !(x.common_mistakes || x.notes);
+        return !x.meaning || !x.spanish || !x.example || !x.common_mistakes || !x.pronunciation_easy;
+      });
       else r = r.filter((x) => (x[key] || '') === value);
     }
     if (search && search.trim()) r = r.filter((x) => smartSearchMatch(x, search));
@@ -318,7 +339,7 @@ export default function LibraryView({
   }, [records, currentView, librarySpecificType, tagFilter, topicFilter, extraFilter, search, filters, sort, pills]);
 
   const clearFilters = () => {
-    setFilters({ level: '', register: '', variety: '', status: '', topic: '', tags: '' });
+    setFilters({ type: '', level: '', register: '', variety: '', status: '', topic: '', tags: '' });
     setPills({ favourite: false, difficult: false, reviewing: false });
     setTagFilter('');
     setTopicFilter('');
@@ -378,6 +399,21 @@ export default function LibraryView({
         })}
       </nav>
 
+      <div className="mobile-category-select-wrap">
+        <span className="mobile-category-select-label">Library section</span>
+        <select
+          className="mobile-category-select"
+          value={librarySpecificType ? librarySpecificType.toLowerCase() : currentView}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (['expression', 'collocation'].includes(value)) onOpenCategory(value[0].toUpperCase() + value.slice(1));
+            else onNavigate(value);
+          }}
+        >
+          {mobileCats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+        </select>
+      </div>
+
       {/* Active filter chips */}
       {(tagFilter || topicFilter || (extraFilter && extraFilter.value)) && (
         <div className="flex flex-wrap gap-2 mb-4">
@@ -398,8 +434,8 @@ export default function LibraryView({
             </span>
           )}
           {extraFilter && extraFilter.value && (
-            <span className={`chip chip-${extraFilter.key === 'level' ? 'level' : extraFilter.key === 'register' ? 'register' : extraFilter.key === 'variety' ? 'variety' : 'status'} inline-flex items-center gap-1`} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
-              {extraFilter.key.charAt(0).toUpperCase() + extraFilter.key.slice(1)}: {extraFilter.value}
+            <span className={`chip chip-${extraFilter.key === 'level' ? 'level' : extraFilter.key === 'register' ? 'register' : extraFilter.key === 'variety' ? 'variety' : extraFilter.key === 'needs_attention' ? 'type' : 'status'} inline-flex items-center gap-1`} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
+              {extraFilter.key === 'needs_attention' ? 'Needs attention' : `${extraFilter.key.charAt(0).toUpperCase() + extraFilter.key.slice(1)}: ${extraFilter.value}`}
               <button type="button" onClick={() => setExtraFilter && setExtraFilter(null)} aria-label="Remove filter" style={{ background: 'transparent', border: 0, cursor: 'pointer', padding: 0, marginLeft: '4px', display: 'inline-flex' }}>
                 <X size={13} />
               </button>
@@ -411,6 +447,12 @@ export default function LibraryView({
       {/* Filters */}
       <div className="card p-4 mb-6">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="field"><label>TYPE</label>
+            <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
+              <option value="">All types</option>
+              {['Vocabulary', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'].map((x) => <option key={x}>{x}</option>)}
+            </select>
+          </div>
           <div className="field"><label>LEVEL</label>
             <select value={filters.level} onChange={(e) => setFilters({ ...filters, level: e.target.value })}>
               <option value="">All levels</option>
@@ -462,7 +504,7 @@ export default function LibraryView({
         {filtered.length === 0 ? (
           <div className="empty-box sm:col-span-2 xl:col-span-3">No entries match this view yet. Add a new discovery to begin.</div>
         ) : filtered.map((r) => (
-          <EntryCard key={r.__backendId} record={r} onOpen={onOpenDetail} onToggleFav={onToggleFav} onDelete={onDelete} query={search} onTagClick={handleTagClick} />
+          <EntryCard key={r.__backendId} record={r} onOpen={onOpenDetail} onToggleFav={onToggleFav} onDelete={onDelete} query={search} onTagClick={handleTagClick} showAttention={extraFilter?.key === 'needs_attention'} />
         ))}
       </div>
 

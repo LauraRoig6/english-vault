@@ -8,7 +8,7 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
-export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue }) {
+export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue, onNeedsAttention }) {
   const stats = useMemo(() => {
     const counts = { Vocabulary: 0, Slang: 0, 'Phrasal Verb': 0, Expression: 0, Collocation: 0, Idiom: 0, 'Connector / Linker': 0, 'Grammar / Trick': 0 };
     records.forEach((r) => { if (counts[r.type] !== undefined) counts[r.type]++; });
@@ -142,12 +142,17 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mt-4">
           {[
             ['Total', records.length], ['Learning', stats.learning], ['Almost learnt', stats.almost], ['Mastered', stats.mastered], ['Added this week', stats.addedWeek], ['Needs attention', stats.needsAttention],
-          ].map(([label, value]) => (
-            <article key={label} className="card p-4">
-              <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>
-              <p className="m-0 mt-2" style={{ fontFamily: "'Fraunces', serif", fontSize: '1.8rem', fontWeight: 700 }}>{value}</p>
-            </article>
-          ))}
+          ].map(([label, value]) => {
+            const clickable = label === 'Needs attention';
+            const Tag = clickable ? 'button' : 'article';
+            return (
+              <Tag key={label} type={clickable ? 'button' : undefined} className={`card p-4 stat-card ${clickable ? 'stat-card-clickable' : ''}`} onClick={clickable ? onNeedsAttention : undefined}>
+                <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{label}</p>
+                <p className="m-0 mt-2" style={{ fontFamily: "'Fraunces', serif", fontSize: '1.8rem', fontWeight: 700 }}>{value}</p>
+                {clickable && <span className="text-xs font-bold mt-2 block" style={{ color: '#9d4f6e' }}>See incomplete entries →</span>}
+              </Tag>
+            );
+          })}
         </div>
       </section>
     </section>

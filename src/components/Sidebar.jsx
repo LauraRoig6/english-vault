@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, House, LibraryBig, MessageCircle, Link2, Sparkles, GitBranch, Brain, GraduationCap, Heart } from 'lucide-react';
+import { House, LibraryBig, MessageCircle, Link2, Sparkles, GitBranch, Brain, GraduationCap, Heart } from 'lucide-react';
 
 const navItems = [
   { id: 'home', label: 'Home', icon: House },
@@ -18,7 +18,7 @@ export default function Sidebar({ currentView, onNavigate }) {
   return (
     <aside className="sidebar" aria-label="Main navigation">
       <div className="flex items-center gap-3 px-2 mb-9">
-        <div className="brand-mark"><BookOpen size={20} /></div>
+        <div className="brand-mark brand-logo">EV<span>✦</span></div>
         <div>
           <h1 className="font-bold text-lg leading-none m-0">English Vault</h1>
           <p className="text-xs mt-1 m-0" style={{ color: '#857480' }}>Your learning library</p>
@@ -40,7 +40,7 @@ export default function Sidebar({ currentView, onNavigate }) {
           );
         })}
       </nav>
-      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v3 · smart learning update</p>
+      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v4 · final polish</p>
     </aside>
   );
 }

@@ -79,6 +79,15 @@ export default function EnglishVault({ session, onSignOut }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const openNeedsAttention = () => {
+    setCurrentView('vocabulary');
+    setLibrarySpecificType('');
+    setLibraryTagFilter('');
+    setLibraryTopicFilter('');
+    setLibraryExtraFilter({ key: 'needs_attention', value: 'true' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Any chip clicked (level/register/variety/status/type) → filter across all
   const openLibraryWithFilter = (value, kind) => {
     if (kind === 'tag') return openLibraryWithTag(value);
@@ -178,7 +187,21 @@ export default function EnglishVault({ session, onSignOut }) {
   };
 
   const handleToggleFav = (record) => {
-    update({ ...record, is_favourite: !record.is_favourite });
+    const next = { ...record, is_favourite: !record.is_favourite };
+    update(next);
+    setDetailRecord((current) => current && current.__backendId === record.__backendId ? { ...current, is_favourite: next.is_favourite } : current);
+  };
+
+  const handleStatusChange = (record, status) => {
+    const next = {
+      ...record,
+      status,
+      is_known: status === 'Mastered',
+      needs_review: status !== 'Mastered',
+    };
+    update(next);
+    setDetailRecord((current) => current && current.__backendId === record.__backendId ? { ...current, ...next } : current);
+    showToast(`Status changed to ${status}.`);
   };
 
   const handleDelete = (record) => {
@@ -286,6 +309,10 @@ export default function EnglishVault({ session, onSignOut }) {
 
       <main className="page-main">
         <header className="topbar">
+          <div className="mobile-quick-actions">
+            <button className="soft-btn" type="button" onClick={handleSurprise}><Dice5 size={17} /> Surprise me</button>
+            <button className="primary-btn" type="button" onClick={openAdd}><Plus size={17} /> Add new</button>
+          </div>
           <div className="search-wrap">
             <Search />
             <label className="sr-only" htmlFor="global-search">Search</label>
@@ -305,16 +332,16 @@ export default function EnglishVault({ session, onSignOut }) {
             />
           </div>
           <div className="flex gap-2">
-            <button className="soft-btn inline-flex gap-2 items-center" type="button" onClick={reload} title="Sync now">
+            <button className="soft-btn top-action-sync inline-flex gap-2 items-center" type="button" onClick={reload} title="Sync now">
               <RefreshCw size={18} />
             </button>
-            <button className="soft-btn inline-flex gap-2 items-center" type="button" onClick={onSignOut} title="Sign out">
+            <button className="soft-btn top-action-signout inline-flex gap-2 items-center" type="button" onClick={onSignOut} title="Sign out">
               <LogOut size={18} />
             </button>
-            <button className="soft-btn inline-flex gap-2 items-center" type="button" onClick={handleSurprise}>
+            <button className="soft-btn top-action-surprise inline-flex gap-2 items-center" type="button" onClick={handleSurprise}>
               <Dice5 size={18} />Surprise me
             </button>
-            <button className="primary-btn inline-flex gap-2 items-center" type="button" onClick={openAdd}>
+            <button className="primary-btn top-action-add inline-flex gap-2 items-center" type="button" onClick={openAdd}>
               <Plus size={18} /><span>Add</span>
             </button>
           </div>
@@ -341,6 +368,7 @@ export default function EnglishVault({ session, onSignOut }) {
             onDiscoverSurprise={handleDiscoverSurprise}
             surpriseLoading={surpriseLoading}
             onStartDue={handleStartDue}
+            onNeedsAttention={openNeedsAttention}
           />
         )}
 
@@ -380,6 +408,9 @@ export default function EnglishVault({ session, onSignOut }) {
         </button>
         <button className={currentView === 'vocabulary' ? 'active' : ''} onClick={() => openView('vocabulary')}>
           <LibraryBig size={20} /><span>Library</span>
+        </button>
+        <button className="bottom-add" onClick={openAdd} aria-label="Add new entry">
+          <Plus size={22} /><span>Add</span>
         </button>
         <button className={currentView === 'practice' ? 'active' : ''} onClick={() => openView('practice')}>
           <GraduationCap size={20} /><span>Practice</span>
@@ -421,6 +452,8 @@ export default function EnglishVault({ session, onSignOut }) {
           onTagClick={(value, kind) => { setDetailRecord(null); openLibraryWithFilter(value, kind); }}
           onRelatedClick={handleRelatedClick}
           onQuiz={handleQuizOne}
+          allRecords={records}
+          onStatusChange={handleStatusChange}
         />
       )}
 
