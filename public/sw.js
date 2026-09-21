@@ -1,6 +1,6 @@
-// English Vault — v6 service worker
+// English Vault — v9 service worker
 // Network-first so a new Vercel deployment appears quickly, with cached fallback offline.
-const CACHE = 'english-vault-v8-everything';
+const CACHE = 'english-vault-v9-everything';
 const SHELL = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {

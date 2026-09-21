@@ -1,0 +1,8 @@
+English Vault v9 · Cleanup Polish
+
+- Quita “View” junto a Cozy/Compact.
+- Tricks sin scroll horizontal: todo el contenido se adapta al ancho.
+- Weekly recap debajo de Stats.
+- Se ocultan del formulario/detalle/autofill/template/quick fill: Etymology, False Friend, British vs American Usage, Sounds Better As, Personal Note/Post-it, Personal Difficulty, Confidence y My Mistakes. Los datos antiguos no se borran de Supabase.
+- Add new entry enfoca automáticamente WORD / EXPRESSION; si viene una palabra precargada, el cursor queda al final.
+- Sharing usa un único diseño (el minimal actual), sin selector Lace/Minimal/Notebook.
