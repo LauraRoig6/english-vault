@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { X, Heart, Volume2, Share2, Sparkles, Languages, GraduationCap, AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, Check, GitCompareArrows, WandSparkles, MessageSquareText } from 'lucide-react';
+import { X, Heart, Volume2, Share2, Sparkles, Languages, GraduationCap, AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, Check, GitCompareArrows, WandSparkles, MessageSquareText, BookOpenCheck, School, Clock3 } from 'lucide-react';
 import { splitList, normalizeEntryText } from '../lib/vaultUtils';
 
 function speak(text, lang) {
@@ -38,6 +38,17 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
+function RichText({ text }) {
+  if (!text) return null;
+  const renderInline = (line) => {
+    const parts = String(line).split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+    return parts.map((part, i) => part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2,-2)}</strong> : part.startsWith('*') && part.endsWith('*') ? <em key={i}>{part.slice(1,-1)}</em> : <React.Fragment key={i}>{part}</React.Fragment>);
+  };
+  const lines = String(text).split(/\n+/).filter(Boolean);
+  const lines = String(text).split(/\n+/).filter(Boolean);
+  return <div className="rich-text">{lines.map((line,i)=>/^[-•]\s/.test(line) ? <div key={i} className="rich-bullet">• {renderInline(line.replace(/^[-•]\s*/,''))}</div> : <p key={i}>{renderInline(line)}</p>)}</div>;
+}
+
 function RelatedPills({ label, value, onRelatedClick, allRecords = [] }) {
   const items = splitList(value);
   if (!items.length) return null;
@@ -59,9 +70,27 @@ function RelatedPills({ label, value, onRelatedClick, allRecords = [] }) {
   );
 }
 
+function LexicalCloud({ label, value, onClick, tone = "pink" }) {
+  const items = splitList(value);
+  if (!items.length) return null;
+  return (
+    <section className={`lexical-cloud cloud-${tone}`}>
+      <p className="text-xs font-bold tracking-widest m-0">{label}</p>
+      <div className="lexical-cloud-items">{items.map((item,i)=><button key={item} type="button" onClick={()=>onClick?.(item)} style={{fontSize:`${.72 + Math.min(i,3)*.06}rem`}}>{item}</button>)}</div>
+    </section>
+  );
+}
+
+function WordFamilyGraph({ value, current, onClick }) {
+  const items = splitList(value);
+  if (!items.length) return null;
+  return <section className="word-family-graph"><p className="text-xs font-bold tracking-widest m-0">WORD FAMILY</p><div className="word-family-map"><span className="family-center">{current}</span>{items.map((x,i)=><button key={x} type="button" className={`family-node n${i%5}`} onClick={()=>onClick?.(x)}>{x}</button>)}</div></section>;
+}
+
 export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz, allRecords = [], onStatusChange }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [contextExamples, setContextExamples] = useState(null);
+  const [contextTab, setContextTab] = useState(0);
   const [spanishHelp, setSpanishHelp] = useState(null);
   const [helpLoading, setHelpLoading] = useState('');
   const [helpError, setHelpError] = useState('');
@@ -72,6 +101,11 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
   const [sentenceText, setSentenceText] = useState('');
   const [sentenceResult, setSentenceResult] = useState(null);
   const [improveResult, setImproveResult] = useState(null);
+  const [compareWord2, setCompareWord2] = useState('');
+  const [compare3Result, setCompare3Result] = useState(null);
+  const [teacherResult, setTeacherResult] = useState(null);
+  const [challengeResult, setChallengeResult] = useState(null);
+  const [shareStyle, setShareStyle] = useState('lace');
   const shareRef = useRef(null);
 
   if (!record) return null;
@@ -95,10 +129,9 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
     ['Common mistakes', record.common_mistakes || record.notes],
   ] : [
     ['Word class', record.word_class], ['Frequency', record.frequency], ['Naturalness note', record.naturalness_label],
-    ['Why this is useful', record.why_useful], ['Native alternative', record.native_alternative], ['Useful for exams', record.useful_for_exams], ['Register ladder', record.register_ladder], ['False friend', record.false_friend],
+    ['Why this is useful', record.why_useful], ['Semantic field', record.semantic_field], ['Etymology / origin', record.etymology], ['Common collocation mistake', record.collocation_mistake], ['Native alternative', record.native_alternative], ['Useful for exams', record.useful_for_exams], ['Register ladder', record.register_ladder], ['False friend', record.false_friend],
     ['Personal difficulty', record.personal_difficulty], ['Confidence', record.confidence], ['My mistakes', record.my_mistakes],
     ['Pattern / structure', record.pattern_structure],
-    ['Word family', record.word_family], ['Typical collocations', record.typical_collocations],
     ['Best for', record.best_for], ['Avoid overusing', record.avoid_overusing], ['Mini contrast', record.mini_contrast],
     ['Common mistakes', record.common_mistakes], ['Notes', record.notes],
     ['Separable', record.separable], ['Transitivity', record.transitive],
@@ -110,13 +143,17 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
     try {
       const response = await fetch('/api/word-help', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, word: record.word, meaning: record.meaning || record.explanation || '', type: record.type || '', compare_word: compareWord, sentence: sentenceText, record }),
+        body: JSON.stringify({ mode, word: record.word, meaning: record.meaning || record.explanation || '', type: record.type || '', compare_word: compareWord,
+          compare_word2: compareWord2, sentence: sentenceText, record }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || 'Could not generate this help.');
       if (mode === 'contexts') setContextExamples(data.examples || []);
       else if (mode === 'spanish') { setSpanishHelp(data); setSpanishSlide(0); }
       else if (mode === 'compare') setCompareResult(data);
+      else if (mode === 'compare3') setCompare3Result(data);
+      else if (mode === 'teacher') setTeacherResult(data);
+      else if (mode === 'challenge') setChallengeResult(data);
       else if (mode === 'sentence') setSentenceResult(data);
       else if (mode === 'improve') setImproveResult(data);
     } catch (err) { setHelpError(err?.message || 'Could not generate this help.'); }
@@ -205,7 +242,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
               <button className="primary-btn" type="button" onClick={() => onQuiz?.(record)}><GraduationCap size={15} style={{ display: 'inline', marginRight: 5 }} />Quiz me on this</button>
             </div>
             {helpError && <p className="text-sm mt-3" style={{ color: '#9d4f6e' }}>{helpError}</p>}
-            {contextExamples && contextExamples.length > 0 && <div className="grid md:grid-cols-3 gap-3 mt-4">{contextExamples.map((ex, i) => <div key={i} className="rounded-xl p-3" style={{ background: '#fff', border: '1px solid #eadde3' }}><p className="text-xs font-bold tracking-widest m-0" style={{ color: '#9a7180' }}>{ex.context}</p><p className="mt-2 mb-1" style={{ lineHeight: 1.5 }}>{ex.sentence}</p><p className="text-xs m-0" style={{ color: '#7b6d75', lineHeight: 1.45 }}>{ex.why_it_fits}</p></div>)}</div>}
+            {contextExamples && contextExamples.length > 0 && <div className="context-tabs mt-4"><div className="context-tab-buttons">{contextExamples.map((ex,i)=><button key={ex.context || i} className={i===contextTab?'active':''} type="button" onClick={()=>setContextTab(i)}>{ex.context}</button>)}</div>{contextExamples[contextTab] && <div className="context-tab-panel"><p className="context-example-sentence">{contextExamples[contextTab].sentence}</p><p className="text-sm m-0">{contextExamples[contextTab].why_it_fits}</p></div>}</div>}
             {spanishHelp && (() => {
               const slides = [
                 spanishHelp.explanation && { title: 'Qué significa', icon: '💡', text: spanishHelp.explanation },
@@ -220,7 +257,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
                     <span className="spanish-carousel-icon">{slide.icon}</span>
                     <div><p className="eyebrow m-0">Explícamelo en español</p><h3 className="spanish-carousel-title">{slide.title}</h3></div>
                   </div>
-                  <p className="spanish-carousel-text">{slide.text}</p>
+                  <div className="spanish-carousel-text"><RichText text={slide.text} /></div>
                   <div className="spanish-carousel-nav">
                     <button type="button" className="carousel-arrow" onClick={() => setSpanishSlide((i) => (i - 1 + slides.length) % slides.length)} aria-label="Anterior"><ChevronLeft size={18} /></button>
                     <div className="carousel-dots">{slides.map((_, i) => <button key={i} type="button" className={i === spanishSlide ? 'active' : ''} onClick={() => setSpanishSlide(i)} aria-label={`Diapositiva ${i + 1}`} />)}</div>
@@ -244,6 +281,28 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
                 {sentenceResult && <div className="ai-result-box mt-3"><strong>{sentenceResult.verdict}</strong><p>{sentenceResult.feedback}</p>{sentenceResult.improved_sentence && <p className="text-sm"><b>More natural:</b> {sentenceResult.improved_sentence}</p>}</div>}
               </div>
             </div>
+            <div className="ai-tool-grid mt-4">
+              <div className="ai-mini-tool">
+                <p className="text-xs font-bold tracking-widest m-0">COMPARE 3 WORDS</p>
+                <select value={compareWord2} onChange={(e)=>setCompareWord2(e.target.value)}><option value="">Choose a third Vault entry</option>{allRecords.filter(r=>r.__backendId!==record.__backendId && r.word!==compareWord).slice().sort((a,b)=>String(a.word).localeCompare(String(b.word))).map(r=><option key={r.__backendId} value={r.word}>{r.word}</option>)}</select>
+                <button className="soft-btn mt-2" type="button" disabled={!compareWord || !compareWord2 || !!helpLoading} onClick={()=>askAiHelp('compare3')}><GitCompareArrows size={14} style={{display:'inline',marginRight:5}}/>Compare three</button>
+                {compare3Result && <div className="ai-result-box mt-3"><strong>{compare3Result.headline}</strong>{compare3Result.items?.map((x,i)=><p key={i}><b>{x.word}:</b> {x.best_when} · {x.contrast}</p>)}<p><b>Bottom line:</b> {compare3Result.bottom_line}</p></div>}
+              </div>
+              <div className="ai-mini-tool">
+                <p className="text-xs font-bold tracking-widest m-0">USE IT IN CONTEXT</p>
+                <button className="soft-btn mt-2" type="button" disabled={!!helpLoading} onClick={()=>askAiHelp('challenge')}><BookOpenCheck size={14} style={{display:'inline',marginRight:5}}/>Give me a challenge</button>
+                {challengeResult && <div className="ai-result-box mt-3"><strong>{challengeResult.situation}</strong><p>{challengeResult.task}</p><details><summary>Model answer</summary><p>{challengeResult.model_answer}</p></details></div>}
+              </div>
+              <div className="ai-mini-tool">
+                <p className="text-xs font-bold tracking-widest m-0">TEACHER MODE</p>
+                <button className="soft-btn mt-2" type="button" disabled={!!helpLoading} onClick={()=>askAiHelp('teacher')}><School size={14} style={{display:'inline',marginRight:5}}/>Generate classroom set</button>
+                {teacherResult && <div className="ai-result-box mt-3"><p><b>B1:</b> {teacherResult.b1}</p><p><b>B2:</b> {teacherResult.b2}</p><p><b>C1:</b> {teacherResult.c1}</p><p><b>Gap-fill:</b> {teacherResult.gap_fill}</p><p><b>Question:</b> {teacherResult.question}</p></div>}
+              </div>
+              <div className="ai-mini-tool">
+                <p className="text-xs font-bold tracking-widest m-0">ENTRY HISTORY</p>
+                <div className="history-lines"><p><Clock3 size={13}/> Added: {record.created_at ? new Date(record.created_at).toLocaleDateString() : '—'}</p><p>Last reviewed: {record.last_reviewed_at ? new Date(record.last_reviewed_at).toLocaleDateString() : 'Never'}</p><p>Reviews: {record.review_count || 0} · Score: {record.review_score || 0}</p></div>
+              </div>
+            </div>
           </section>
         )}
 
@@ -260,6 +319,16 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
             <p className="text-xs font-bold tracking-widest m-0" style={{ color: '#665784' }}>MY EXAMPLE ✦</p>
             <p className="leading-relaxed mt-2 mb-0" style={{ fontWeight: 600 }}>{record.my_example}</p>
           </section>
+        )}
+
+        {!isTrick && (record.word_family || record.typical_collocations || record.personal_note || record.variety_usage || record.sounds_better_as) && (
+          <div className="learning-visual-grid mt-5">
+            <WordFamilyGraph value={record.word_family} current={record.word} onClick={onRelatedClick} />
+            <LexicalCloud label="COLLOCATION CLOUD" value={record.typical_collocations} onClick={onRelatedClick} tone="sage" />
+            {record.variety_usage && <section className="uk-us-card"><p className="text-xs font-bold tracking-widest m-0">🇬🇧 UK ↔ US 🇺🇸</p><p>{record.variety_usage}</p></section>}
+            {record.sounds_better_as && <section className="sounds-better-card"><p className="text-xs font-bold tracking-widest m-0">✨ SOUNDS BETTER AS…</p><p>{record.sounds_better_as}</p></section>}
+            {record.personal_note && <section className="detail-postit"><p className="text-xs font-bold tracking-widest m-0">MY POST-IT</p><p>{record.personal_note}</p></section>}
+          </div>
         )}
 
         <div className="grid md:grid-cols-2 gap-5 mt-7">
@@ -283,8 +352,10 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           <div className="flex gap-2"><button className="soft-btn" type="button" onClick={() => onEdit(record)}>Edit</button><button className="soft-btn" type="button" onClick={onClose}>Close</button></div>
         </div>
 
+        <div className="share-style-picker mt-5"><span>Share card style:</span>{['lace','minimal','notebook'].map(x=><button key={x} type="button" className={shareStyle===x?'active':''} onClick={()=>setShareStyle(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div>
+
         <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
-          <div ref={shareRef} style={{ width: '540px', padding: '40px', background: 'linear-gradient(135deg,#fde5ed,#fff8f4 55%,#eeeafb)', fontFamily: "'DM Sans', sans-serif", color: '#3d3540' }}>
+          <div ref={shareRef} className={`share-card share-${shareStyle}`} style={{ width: '540px', padding: '48px', fontFamily: "'DM Sans', sans-serif", color: '#3d3540' }}>
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#a46880', margin: 0 }}>English Vault ✦</p>
             <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: '3.4rem', fontWeight: 700, lineHeight: 1.02, letterSpacing: '-0.03em', margin: '10px 0 6px', color: '#3d3540' }}>{record.word}</h1>
             <p style={{ fontSize: '0.85rem', color: '#a46880', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 20px' }}>{record.type}{record.level ? ` · ${record.level}` : ''}</p>

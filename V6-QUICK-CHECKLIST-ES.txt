@@ -1,0 +1,16 @@
+CHECKLIST RÁPIDA DESPUÉS DEL DEPLOY
+===================================
+1. Sidebar: debe decir “v6 · everything edition”.
+2. Theme: prueba Lavender y Dark pastel; recarga y confirma que recuerda el tema.
+3. Add: escribe “to blare” y Autofill. Debe salir Verb + campos nuevos.
+4. Copy template: debe incluir la palabra y Etymology, UK/US usage, Collocation mistake, Sounds better as, Semantic field y Personal note.
+5. Detail: comprueba Word family map, Collocation cloud y post-it si tienen datos.
+6. Explícamelo en español: **texto** debe verse en negrita, no con asteriscos.
+7. 3 context examples: cambia entre las 3 pestañas.
+8. Share: prueba Lace / Minimal / Notebook y luego Share.
+9. Library: prueba Cozy / Compact y Save filters.
+10. Home: el saved filter debe aparecer en Pinned collections al volver a Home.
+11. Practice: prueba One-minute, Context Guessing, Most Natural y Listen & Type.
+12. Pronunciation: Speech Recognition depende del navegador; si no existe, la app muestra un aviso y no se rompe.
+13. Móvil: long-press en una tarjeta y swipe derecha/izquierda.
+14. Supabase: crea/edita una entrada en móvil y sincroniza en PC.

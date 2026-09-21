@@ -8,7 +8,7 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
-export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue, onNeedsAttention, onSmartCollection }) {
+export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue, onNeedsAttention, onSmartCollection, onOpenSavedView }) {
   const stats = useMemo(() => {
     const counts = { Vocabulary: 0, Verb: 0, Slang: 0, 'Phrasal Verb': 0, Expression: 0, Collocation: 0, Idiom: 0, 'Connector / Linker': 0, 'Grammar / Trick': 0 };
     records.forEach((r) => { if (counts[r.type] !== undefined) counts[r.type]++; });
@@ -30,6 +30,15 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
 
   const recent = useMemo(() => [...records].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 4), [records]);
   const difficult = useMemo(() => records.filter((r) => r.is_difficult).slice(0, 4), [records]);
+  const mostMissed = useMemo(() => [...records].filter(r=>(r.mistake_count||0)>0).sort((a,b)=>(b.mistake_count||0)-(a.mistake_count||0)).slice(0,4), [records]);
+  const timeline = useMemo(() => [...records].sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,8), [records]);
+  const savedViews = useMemo(() => { try { return JSON.parse(localStorage.getItem('ev-saved-searches') || '[]'); } catch { return []; } }, []);
+  const streak = useMemo(() => {
+    const days = new Set(records.map(r=>String(r.created_at||'').slice(0,10)).filter(Boolean));
+    let count=0; const d=new Date();
+    for(let i=0;i<365;i++){ const key=d.toISOString().slice(0,10); if(days.has(key)) count++; else if(i>0) break; d.setDate(d.getDate()-1); }
+    return count;
+  },[records]);
 
 
   const categoryCards = [
@@ -111,9 +120,11 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
         </div>
         <div className="card p-4 mt-3" style={{ background:'#fffaf0' }}>
           <strong>Weekly recap ✦</strong>
-          <span className="text-sm ml-2" style={{ color:'#726773' }}>You added {stats.addedWeek} {stats.addedWeek === 1 ? 'entry' : 'entries'} this week and have {stats.mastered} mastered in total.</span>
+          <span className="text-sm ml-2" style={{ color:'#726773' }}>You added {stats.addedWeek} {stats.addedWeek === 1 ? 'entry' : 'entries'} this week, have {stats.mastered} mastered, and a {streak}-day adding streak.</span>
         </div>
       </section>
+
+      {savedViews.length > 0 && <section className="mt-8"><div className="flex justify-between items-end mb-4"><div><p className="eyebrow">Made by you</p><h2 className="section-heading">Pinned collections</h2></div></div><div className="flex flex-wrap gap-2">{savedViews.map(v=><button key={v.name} className="soft-btn" type="button" onClick={()=>onOpenSavedView?.(v)}>📌 {v.name}</button>)}</div></section>}
 
       {/* Bottom rows */}
       <div className="grid lg:grid-cols-3 gap-5 mt-8">
@@ -151,6 +162,11 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
           </div>
         </article>
 
+        <article className="card p-5">
+          <div className="flex justify-between items-center mb-4"><h2 className="section-heading">Most missed</h2><Chip kind="register">Mistake history</Chip></div>
+          <div className="space-y-2">{mostMissed.length===0?<p className="text-sm py-3" style={{color:'#726773'}}>No repeated mistakes logged yet.</p>:mostMissed.map(r=><button key={r.__backendId} className="w-full text-left p-2 rounded-xl hover:bg-rose-50" onClick={()=>onOpenDetail(r)}><strong className="block text-sm">{r.word}</strong><span className="block text-xs" style={{color:'#726773'}}>{r.mistake_count} misses · {r.review_count||0} reviews</span></button>)}</div>
+        </article>
+
         <article className="card pastel-lavender p-5">
           <p className="font-bold text-lg m-0"><Clock3 size={18} style={{ display: 'inline', marginRight: 6 }} />Review due</p>
           <p className="text-sm mt-2">{stats.reviewCount} {stats.reviewCount === 1 ? 'discovery is' : 'discoveries are'} ready for review</p>
@@ -159,6 +175,11 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
           </button>
         </article>
       </div>
+
+      <section className="mt-8">
+        <p className="eyebrow">Your learning timeline</p><h2 className="section-heading">Recent activity</h2>
+        <div className="timeline-strip mt-4">{timeline.map(r=><button key={r.__backendId} type="button" onClick={()=>onOpenDetail(r)}><span>{new Date(r.created_at||0).toLocaleDateString(undefined,{day:'2-digit',month:'short'})}</span><strong>{r.word}</strong><small>{r.type}</small></button>)}</div>
+      </section>
 
       <section className="mt-8">
         <p className="eyebrow">Your progress</p>

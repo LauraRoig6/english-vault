@@ -1,10 +1,7 @@
-// English Vault — minimal service worker for offline shell
-const CACHE = 'english-vault-v1';
-const SHELL = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-];
+// English Vault — v6 service worker
+// Network-first so a new Vercel deployment appears quickly, with cached fallback offline.
+const CACHE = 'english-vault-v6-everything';
+const SHELL = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
@@ -12,9 +9,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-  );
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))));
   self.clients.claim();
 });
 
@@ -22,21 +17,18 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  // Never cache API calls
   if (url.pathname.startsWith('/api/')) return;
 
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      const network = fetch(req)
-        .then((res) => {
-          if (res && res.status === 200 && res.type === 'basic') {
-            const clone = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, clone)).catch(() => {});
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
-  );
+  event.respondWith((async () => {
+    try {
+      const fresh = await fetch(req);
+      if (fresh && fresh.status === 200 && fresh.type === 'basic') {
+        const cache = await caches.open(CACHE);
+        cache.put(req, fresh.clone()).catch(() => {});
+      }
+      return fresh;
+    } catch {
+      return (await caches.match(req)) || (await caches.match('/index.html'));
+    }
+  })());
 });

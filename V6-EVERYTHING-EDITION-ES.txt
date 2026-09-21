@@ -1,0 +1,72 @@
+ENGLISH VAULT — v6 EVERYTHING EDITION
+=====================================
+
+Esta versión parte de v5 y conserva Supabase, OpenAI, PWA, búsqueda, duplicados, Surprise Me, pronunciación UK/US, Easy Pronunciation, Practice, Export/Import y todos los campos anteriores.
+
+NUEVO / AMPLIADO
+----------------
+APARIENCIA
+- Temas Pink, Lavender, Sage, Blue, Dark pastel y System.
+- Selector Theme también visible en móvil.
+- Tarjetas compartidas: Lace (blonda), Minimal y Notebook.
+- Shared card Lace predeterminada.
+- Vista Library Cozy / Compact.
+- Carrusel de “Explícamelo en español” interpreta **negrita** y *cursiva*.
+- 3 context examples ahora con pestañas Formal / Informal / Conversation.
+
+VOCABULARIO / FICHA
+- Etymology / Origin.
+- British vs American usage.
+- Common collocation mistake.
+- Sounds better as…
+- Semantic field.
+- Personal Note tipo post-it.
+- Word Family en mini mapa visual.
+- Typical Collocations en nube de chips.
+- Naturalness thermometer, Frequency, Best for, Useful for exams, Register ladder, False friend, Native alternative, Mini contrast, Avoid overusing, Personal difficulty, Confidence, My mistakes, etc.
+- Todos los nuevos campos están conectados a Autofill, formulario, Copy template, Quick Fill, Supabase, Edit y Detail.
+
+IA
+- AI Compare (2 palabras).
+- AI Compare 3 words.
+- Check my sentence.
+- Improve this entry.
+- Use it in context challenge.
+- Teacher Mode: B1 / B2 / C1 / gap-fill / question.
+- Explain in Spanish con Markdown visual.
+
+BIBLIOTECA
+- Saved searches / saved filter views.
+- Los saved views aparecen en Home como Pinned collections.
+- Semantic Field como filtro.
+- Compact / Cozy card view.
+- Swipe móvil: derecha = favourite; izquierda = toggle review.
+- Long press móvil = menú Open / Favourite / Review later.
+
+HOME / PROGRESO
+- Weekly recap.
+- Adding streak.
+- Timeline de actividad reciente.
+- Most missed = historial práctico de palabras más falladas.
+- Smart collections, Needs attention, Review due, Recently added, stats.
+
+PRACTICE
+- Flashcards.
+- Multiple Choice.
+- Written answers.
+- English → Spanish.
+- Spanish → English / Reverse recall.
+- One-minute Review (5 items).
+- Context Guessing / fill the gap.
+- Most Natural choice.
+- Listen & Type.
+- Pronunciation challenge con reconocimiento de voz cuando el navegador lo soporte.
+- Smart priority: prioriza errores, dificultad, review pendiente y antigüedad.
+- mistake_count se incrementa con Again / Hard.
+
+PWA
+- Service worker actualizado a v6 y network-first para reducir problemas de caché tras nuevos deployments.
+
+DATOS
+- No requiere nuevas columnas en Supabase: los nuevos campos viven dentro de data JSONB.
+- No borra las entradas existentes.

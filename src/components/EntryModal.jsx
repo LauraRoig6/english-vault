@@ -8,14 +8,14 @@ const typeOptions = ['Vocabulary', 'Verb', 'Slang', 'Phrasal Verb', 'Expression'
 const emptyForm = {
   type: 'Vocabulary', word: '', meaning: '', spanish: '', example: '', my_example: '',
   register: '', level: '', variety: '', topic: '', tags: '', notes: '',
-  synonyms: '', antonyms: '', related: '', pattern_structure: '', confused_with: '', usage_warning: '', pronunciation_easy: '', word_family: '', typical_collocations: '', best_for: '', avoid_overusing: '', mini_contrast: '', word_class: '', frequency: '', naturalness_score: '', naturalness_label: '', native_alternative: '', useful_for_exams: '', register_ladder: '', my_mistakes: '', personal_difficulty: '', confidence: '', why_useful: '', false_friend: '', separable: '', transitive: '', similar_expressions: '',
+  synonyms: '', antonyms: '', related: '', pattern_structure: '', confused_with: '', usage_warning: '', pronunciation_easy: '', word_family: '', typical_collocations: '', best_for: '', avoid_overusing: '', mini_contrast: '', word_class: '', frequency: '', naturalness_score: '', naturalness_label: '', native_alternative: '', useful_for_exams: '', register_ladder: '', my_mistakes: '', personal_difficulty: '', confidence: '', why_useful: '', false_friend: '', etymology: '', variety_usage: '', collocation_mistake: '', sounds_better_as: '', semantic_field: '', personal_note: '', separable: '', transitive: '', similar_expressions: '',
   how_common: '', offensive_warning: '', slang_tags: '',
   trick_category: '', rule: '', explanation: '', examples_list: '', exceptions: '', memory_trick: '', common_mistakes: '',
   is_favourite: false, is_difficult: false, is_known: false, needs_review: true,
 };
 
 function copyTemplate(word = '') {
-  return `NEW DISCOVERY\n\nWORD / EXPRESSION: ${String(word || '').trim().toLowerCase()}\nTYPE:\nMEANING IN ENGLISH:\nSPANISH:\nEASY PRONUNCIATION:\nNATURAL EXAMPLE:\nMY EXAMPLE:\nREGISTER:\nLEVEL:\nVARIETY:\nTOPIC:\nTAGS:\nSYNONYMS:\nRELATED EXPRESSIONS:\nANTONYMS:\nWORD CLASS:\nWORD FAMILY:\nTYPICAL COLLOCATIONS:\nFREQUENCY:\nNATURALNESS SCORE:\nNATURALNESS LABEL:\nBEST FOR:\nUSEFUL FOR EXAMS:\nNATIVE ALTERNATIVE:\nREGISTER LADDER:\nWHY IS THIS USEFUL?:\nFALSE FRIEND:\nPERSONAL DIFFICULTY:\nCONFIDENCE:\nMY MISTAKES:\nPATTERN / STRUCTURE:\nCONFUSED WITH:\nMINI CONTRAST:\nAVOID OVERUSING:\nPHRASAL: SEPARABLE?:\nPHRASAL: TRANSITIVITY:\nRELATED PHRASAL VERBS:\nSLANG: HOW COMMON?:\nUSAGE WARNING:\nSLANG TAGS:\nTRICK CATEGORY:\nRULE:\nEXPLANATION:\nEXAMPLES:\nEXCEPTIONS:\nMEMORY TRICK:\nCOMMON MISTAKES:\nNOTES:`;
+  return `NEW DISCOVERY\n\nWORD / EXPRESSION: ${String(word || '').trim().toLowerCase()}\nTYPE:\nMEANING IN ENGLISH:\nSPANISH:\nEASY PRONUNCIATION:\nNATURAL EXAMPLE:\nMY EXAMPLE:\nREGISTER:\nLEVEL:\nVARIETY:\nTOPIC:\nTAGS:\nSYNONYMS:\nRELATED EXPRESSIONS:\nANTONYMS:\nWORD CLASS:\nWORD FAMILY:\nTYPICAL COLLOCATIONS:\nFREQUENCY:\nNATURALNESS SCORE:\nNATURALNESS LABEL:\nBEST FOR:\nUSEFUL FOR EXAMS:\nNATIVE ALTERNATIVE:\nREGISTER LADDER:\nWHY IS THIS USEFUL?:\nFALSE FRIEND:\nETYMOLOGY / ORIGIN:\nBRITISH VS AMERICAN USAGE:\nCOMMON COLLOCATION MISTAKE:\nSOUNDS BETTER AS:\nSEMANTIC FIELD:\nPERSONAL NOTE:\nPERSONAL DIFFICULTY:\nCONFIDENCE:\nMY MISTAKES:\nPATTERN / STRUCTURE:\nCONFUSED WITH:\nMINI CONTRAST:\nAVOID OVERUSING:\nPHRASAL: SEPARABLE?:\nPHRASAL: TRANSITIVITY:\nRELATED PHRASAL VERBS:\nSLANG: HOW COMMON?:\nUSAGE WARNING:\nSLANG TAGS:\nTRICK CATEGORY:\nRULE:\nEXPLANATION:\nEXAMPLES:\nEXCEPTIONS:\nMEMORY TRICK:\nCOMMON MISTAKES:\nNOTES:`;
 }
 
 export default function EntryModal({ onClose, onSave, editingRecord, prefillRecord, existingRecords }) {
@@ -62,7 +62,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
         best_for: editingRecord.best_for || '',
         avoid_overusing: editingRecord.avoid_overusing || '',
         mini_contrast: editingRecord.mini_contrast || '',
-        antonyms: editingRecord.antonyms || '', word_class: editingRecord.word_class || '', frequency: editingRecord.frequency || '', naturalness_score: editingRecord.naturalness_score || '', naturalness_label: editingRecord.naturalness_label || '', native_alternative: editingRecord.native_alternative || '', useful_for_exams: editingRecord.useful_for_exams || '', register_ladder: editingRecord.register_ladder || '', my_mistakes: editingRecord.my_mistakes || '', personal_difficulty: editingRecord.personal_difficulty || '', confidence: editingRecord.confidence || '', why_useful: editingRecord.why_useful || '', false_friend: editingRecord.false_friend || '',
+        antonyms: editingRecord.antonyms || '', word_class: editingRecord.word_class || '', frequency: editingRecord.frequency || '', naturalness_score: editingRecord.naturalness_score || '', naturalness_label: editingRecord.naturalness_label || '', native_alternative: editingRecord.native_alternative || '', useful_for_exams: editingRecord.useful_for_exams || '', register_ladder: editingRecord.register_ladder || '', my_mistakes: editingRecord.my_mistakes || '', personal_difficulty: editingRecord.personal_difficulty || '', confidence: editingRecord.confidence || '', why_useful: editingRecord.why_useful || '', false_friend: editingRecord.false_friend || '', etymology: editingRecord.etymology || '', variety_usage: editingRecord.variety_usage || '', collocation_mistake: editingRecord.collocation_mistake || '', sounds_better_as: editingRecord.sounds_better_as || '', semantic_field: editingRecord.semantic_field || '', personal_note: editingRecord.personal_note || '',
       });
     } else if (prefillRecord) {
       const allowed = ['Vocabulary', 'Verb', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
@@ -96,7 +96,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       pattern_structure: form.pattern_structure, confused_with: form.confused_with, usage_warning: form.usage_warning,
       pronunciation_easy: form.pronunciation_easy, word_family: form.word_family, typical_collocations: form.typical_collocations,
       best_for: form.best_for, avoid_overusing: form.avoid_overusing, mini_contrast: form.mini_contrast,
-      antonyms: form.antonyms, word_class: form.word_class, frequency: form.frequency, naturalness_score: form.naturalness_score ? Number(form.naturalness_score) : 0, naturalness_label: form.naturalness_label, native_alternative: form.native_alternative, useful_for_exams: form.useful_for_exams, register_ladder: form.register_ladder, my_mistakes: form.my_mistakes, personal_difficulty: form.personal_difficulty, confidence: form.confidence, why_useful: form.why_useful, false_friend: form.false_friend,
+      antonyms: form.antonyms, word_class: form.word_class, frequency: form.frequency, naturalness_score: form.naturalness_score ? Number(form.naturalness_score) : 0, naturalness_label: form.naturalness_label, native_alternative: form.native_alternative, useful_for_exams: form.useful_for_exams, register_ladder: form.register_ladder, my_mistakes: form.my_mistakes, personal_difficulty: form.personal_difficulty, confidence: form.confidence, why_useful: form.why_useful, false_friend: form.false_friend, etymology: form.etymology, variety_usage: form.variety_usage, collocation_mistake: form.collocation_mistake, sounds_better_as: form.sounds_better_as, semantic_field: form.semantic_field, personal_note: form.personal_note,
       is_favourite: form.is_favourite, is_difficult: form.is_difficult, is_known: form.is_known, needs_review: form.needs_review,
       status: form.is_known ? 'Mastered' : (form.status || 'New'),
       separable: isTrick ? form.trick_category : form.separable,
@@ -157,6 +157,12 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       'CONFIDENCE': 'confidence',
       'WHY IS THIS USEFUL?': 'why_useful',
       'FALSE FRIEND': 'false_friend',
+      'ETYMOLOGY / ORIGIN': 'etymology',
+      'BRITISH VS AMERICAN USAGE': 'variety_usage',
+      'COMMON COLLOCATION MISTAKE': 'collocation_mistake',
+      'SOUNDS BETTER AS': 'sounds_better_as',
+      'SEMANTIC FIELD': 'semantic_field',
+      'PERSONAL NOTE': 'personal_note',
       'PATTERN / STRUCTURE': 'pattern_structure',
       'MINI CONTRAST': 'mini_contrast',
       'BEST FOR': 'best_for',
@@ -379,6 +385,12 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             {!isTrick && <div className="field"><label>REGISTER LADDER</label><input value={form.register_ladder} onChange={(e) => set('register_ladder', e.target.value)} placeholder="e.g. kids → children → youngsters" /></div>}
             {!isTrick && <div className="field md:col-span-2"><label>WHY IS THIS USEFUL?</label><input value={form.why_useful} onChange={(e) => set('why_useful', e.target.value)} /></div>}
             {!isTrick && <div className="field"><label>FALSE FRIEND</label><input value={form.false_friend} onChange={(e) => set('false_friend', e.target.value)} placeholder="Leave blank unless relevant" /></div>}
+            {!isTrick && <div className="field md:col-span-2"><label>ETYMOLOGY / ORIGIN</label><textarea value={form.etymology} onChange={(e) => set('etymology', e.target.value)} placeholder="Short origin only when genuinely useful" /></div>}
+            {!isTrick && <div className="field md:col-span-2"><label>BRITISH VS AMERICAN USAGE</label><textarea value={form.variety_usage} onChange={(e) => set('variety_usage', e.target.value)} placeholder="Only real UK/US differences" /></div>}
+            {!isTrick && <div className="field md:col-span-2"><label>COMMON COLLOCATION MISTAKE</label><input value={form.collocation_mistake} onChange={(e) => set('collocation_mistake', e.target.value)} placeholder="e.g. make a decision, not do a decision" /></div>}
+            {!isTrick && <div className="field md:col-span-2"><label>SOUNDS BETTER AS…</label><input value={form.sounds_better_as} onChange={(e) => set('sounds_better_as', e.target.value)} placeholder="A more natural phrasing when useful" /></div>}
+            {!isTrick && <div className="field"><label>SEMANTIC FIELD</label><input value={form.semantic_field} onChange={(e) => set('semantic_field', e.target.value)} placeholder="e.g. confusion, agreement, academic writing" /></div>}
+            {!isTrick && <div className="field md:col-span-2"><label>PERSONAL NOTE · POST-IT</label><textarea value={form.personal_note} onChange={(e) => set('personal_note', e.target.value)} placeholder="Your own little note, memory or reminder" /></div>}
             {!isTrick && <div className="field"><label>PERSONAL DIFFICULTY</label>
               <select value={form.personal_difficulty} onChange={(e) => set('personal_difficulty', e.target.value)}><option value="">Not set</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
             </div>}

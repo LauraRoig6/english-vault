@@ -4,7 +4,7 @@ const schema = {
   type: 'object',
   additionalProperties: false,
   required: [
-    'type','word','meaning','spanish','pronunciation_easy','example','my_example','register','level','variety','topic','tags','synonyms','antonyms','related','word_class','word_family','typical_collocations','frequency','naturalness_score','naturalness_label','native_alternative','useful_for_exams','register_ladder','my_mistakes','personal_difficulty','confidence','why_useful','false_friend','pattern_structure','confused_with','mini_contrast','best_for','avoid_overusing','usage_warning',
+    'type','word','meaning','spanish','pronunciation_easy','example','my_example','register','level','variety','topic','tags','synonyms','antonyms','related','word_class','word_family','typical_collocations','frequency','naturalness_score','naturalness_label','native_alternative','useful_for_exams','register_ladder','my_mistakes','personal_difficulty','confidence','why_useful','false_friend','etymology','variety_usage','collocation_mistake','sounds_better_as','semantic_field','personal_note','pattern_structure','confused_with','mini_contrast','best_for','avoid_overusing','usage_warning',
     'separable','transitive','similar_expressions','how_common','offensive_warning','slang_tags','trick_category','rule','explanation',
     'examples_list','exceptions','memory_trick','common_mistakes','notes'
   ],
@@ -15,7 +15,7 @@ const schema = {
     level: { type: 'string', enum: ['', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Native-like'] },
     variety: { type: 'string', enum: ['', 'British English', 'American English', 'Both'] },
     topic: { type: 'string' }, tags: { type: 'string' }, synonyms: { type: 'string' }, antonyms: { type: 'string' }, related: { type: 'string' }, word_class: { type: 'string' },
-    word_family: { type: 'string' }, typical_collocations: { type: 'string' }, frequency: { type: 'string' }, naturalness_score: { type: 'integer', minimum: 1, maximum: 5 }, naturalness_label: { type: 'string' }, native_alternative: { type: 'string' }, useful_for_exams: { type: 'string' }, register_ladder: { type: 'string' }, my_mistakes: { type: 'string' }, personal_difficulty: { type: 'string' }, confidence: { type: 'string' }, why_useful: { type: 'string' }, false_friend: { type: 'string' },
+    word_family: { type: 'string' }, typical_collocations: { type: 'string' }, frequency: { type: 'string' }, naturalness_score: { type: 'integer', minimum: 1, maximum: 5 }, naturalness_label: { type: 'string' }, native_alternative: { type: 'string' }, useful_for_exams: { type: 'string' }, register_ladder: { type: 'string' }, my_mistakes: { type: 'string' }, personal_difficulty: { type: 'string' }, confidence: { type: 'string' }, why_useful: { type: 'string' }, false_friend: { type: 'string' }, etymology: { type: 'string' }, variety_usage: { type: 'string' }, collocation_mistake: { type: 'string' }, sounds_better_as: { type: 'string' }, semantic_field: { type: 'string' }, personal_note: { type: 'string' },
     pattern_structure: { type: 'string' }, confused_with: { type: 'string' }, mini_contrast: { type: 'string' }, best_for: { type: 'string' }, avoid_overusing: { type: 'string' }, usage_warning: { type: 'string' },
     separable: { type: 'string' }, transitive: { type: 'string' }, similar_expressions: { type: 'string' }, how_common: { type: 'string' },
     offensive_warning: { type: 'string' }, slang_tags: { type: 'string' }, trick_category: { type: 'string' }, rule: { type: 'string' },
@@ -54,6 +54,12 @@ USEFUL FOR EXAMS: short labels such as "Essay", "Speaking", "CAE/C1", "Formal wr
 REGISTER LADDER: when useful, show a short progression from informal to neutral to formal, e.g. "kids → children → youngsters"; otherwise blank.
 WHY IS THIS USEFUL?: one concise learner-focused reason to remember the item.
 FALSE FRIEND: only populate for a real Spanish-English false friend or especially dangerous translation trap; otherwise blank.
+ETYMOLOGY / ORIGIN: give one short memorable origin only when reasonably established and useful; otherwise blank.
+BRITISH VS AMERICAN USAGE: explain a real UK/US difference in wording, pronunciation or frequency only when meaningful; otherwise blank.
+COMMON COLLOCATION MISTAKE: give one concise wrong→right collocation trap when useful; otherwise blank.
+SOUNDS BETTER AS: when a learner is likely to produce a technically possible but less natural version, give one more idiomatic alternative; otherwise blank.
+SEMANTIC FIELD: one short thematic label such as confusion, agreement, anger, movement, academic writing.
+PERSONAL NOTE belongs to the learner, so ALWAYS return it as an empty string.
 MY MISTAKES, PERSONAL DIFFICULTY and CONFIDENCE belong to the learner, so ALWAYS return them as empty strings.
 
 Populate usage_warning whenever register, grammar, connotation, countability, collocation or context could cause a learner mistake. COMMON MISTAKES MUST be non-empty for every non-Grammar/Trick entry: give 1-2 concise, specific learner mistakes or usage traps. For idioms, include a literal-translation/fixed-expression trap when relevant. For connectors, mention punctuation/position/register if useful. For vocabulary, mention a realistic collocation, meaning, register, countability, preposition or false-friend trap. Never invent an unrelated comparison merely to fill it. Never use em dashes as placeholders.

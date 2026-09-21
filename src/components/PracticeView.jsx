@@ -20,7 +20,12 @@ const modes = [
   { id: 'multiple', title: 'Multiple Choice', sub: 'Choose the answer' },
   { id: 'write', title: 'Write the Answer', sub: 'Recall in your words' },
   { id: 'en-es', title: 'English → Spanish', sub: 'Translate it' },
-  { id: 'es-en', title: 'Spanish → English', sub: 'Translate it back' },
+  { id: 'es-en', title: 'Spanish → English', sub: 'Reverse recall' },
+  { id: 'one-minute', title: 'One-minute Review', sub: '5 quick cards' },
+  { id: 'context-gap', title: 'Context Guessing', sub: 'Fill the gap' },
+  { id: 'natural-choice', title: 'Most Natural', sub: 'Choose what sounds best' },
+  { id: 'listen-type', title: 'Listen & Type', sub: 'Hear it, then spell it' },
+  { id: 'speak', title: 'Pronunciation', sub: 'Say it aloud' },
 ];
 
 function Chip({ kind, children }) {
@@ -48,6 +53,7 @@ export default function PracticeView({ records, onUpdate, onToast, focusRecords 
   const [writeAnswer, setWriteAnswer] = useState('');
   const [writeFeedback, setWriteFeedback] = useState('');
   const [showRating, setShowRating] = useState(false);
+  const [speechFeedback, setSpeechFeedback] = useState('');
 
   const filteredRecords = useMemo(() => {
     let r = records.filter((x) => !x.is_known);
@@ -56,12 +62,17 @@ export default function PracticeView({ records, onUpdate, onToast, focusRecords 
     if (flags.difficult) r = r.filter((x) => x.is_difficult);
     if (flags.review) r = r.filter((x) => x.needs_review);
     if (flags.due) r = r.filter(isDue);
+    // Smart priority: harder, frequently missed and older items surface first.
+    r = [...r].sort((a,b)=>{
+      const score = (x) => (x.mistake_count||0)*5 + (x.personal_difficulty==='Hard'?4:0) + (x.needs_review?3:0) - (x.review_score||0) + Math.min(10,(Date.now()-new Date(x.last_reviewed_at||x.created_at||Date.now()).getTime())/86400000/10);
+      return score(b)-score(a);
+    });
     return r;
   }, [records, category, flags]);
 
   const start = () => {
     if (!filteredRecords.length) return;
-    setSession([...filteredRecords].sort(() => Math.random() - 0.5));
+    setSession([...filteredRecords].slice(0, mode==='one-minute'?5:filteredRecords.length));
     setIndex(0);
     resetCard();
   };
@@ -73,6 +84,7 @@ export default function PracticeView({ records, onUpdate, onToast, focusRecords 
     setWriteAnswer('');
     setWriteFeedback('');
     setShowRating(false);
+    setSpeechFeedback('');
   };
 
   const exitSession = () => { setSession([]); setIndex(0); resetCard(); };
@@ -90,18 +102,24 @@ export default function PracticeView({ records, onUpdate, onToast, focusRecords 
   const answerText = (r, m) => {
     if (!r) return '';
     if (m === 'en-es') return r.spanish || r.meaning || '';
-    if (m === 'es-en') return r.word || '';
+    if (m === 'es-en' || m === 'listen-type' || m === 'context-gap' || m === 'one-minute') return r.word || '';
+    if (m === 'natural-choice') return r.native_alternative || r.word || '';
     return r.meaning || r.spanish || r.explanation || '';
   };
   const promptText = (r, m) => {
     if (!r) return '';
     if (m === 'en-es') return r.word;
     if (m === 'es-en') return r.spanish || r.meaning || r.word;
+    if (m === 'context-gap') { const ex=String(r.example||'Use the target naturally in context.'); const escaped=String(r.word||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return ex.replace(new RegExp(escaped,'ig'),'_____'); }
+    if (m === 'natural-choice') return `Which option sounds most natural for: ${r.meaning || r.spanish || r.word}?`;
+    if (m === 'listen-type') return 'Listen, then type what you hear.';
+    if (m === 'one-minute') return r.spanish || r.meaning || r.word;
+    if (m === 'speak') return r.word;
     return r.word;
   };
 
   const multipleOptions = useMemo(() => {
-    if (mode !== 'multiple' || !current) return [];
+    if (!['multiple','natural-choice'].includes(mode) || !current) return [];
     const correct = answerText(current, mode);
     const set = new Map();
     [correct, ...records.filter((x) => x.__backendId !== current.__backendId).map((x) => answerText(x, mode))]
@@ -120,6 +138,7 @@ export default function PracticeView({ records, onUpdate, onToast, focusRecords 
       ...current,
       review_count: (current.review_count || 0) + 1,
       review_score: Math.max(0, (current.review_score || 0) + scoreDelta),
+      mistake_count: (current.mistake_count || 0) + (['again','hard'].includes(rating) ? 1 : 0),
       status,
       needs_review: rating !== 'easy',
       is_known: rating === 'easy',
@@ -253,12 +272,25 @@ export default function PracticeView({ records, onUpdate, onToast, focusRecords 
           </div>
         )}
 
-        {(mode === 'write' || mode === 'en-es' || mode === 'es-en') && (
+        {mode === 'listen-type' && (
+          <form className="card p-6" onSubmit={(e)=>{e.preventDefault(); const ok=norm(writeAnswer)===norm(current.word); setWriteFeedback(ok?'Correct — great listening!':`Answer: ${current.word}`); setShowRating(true);}}>
+            <h3 className="section-heading">Listen & type</h3><button type="button" className="soft-btn mt-4" onClick={()=>{const u=new SpeechSynthesisUtterance(current.word);u.lang='en-GB';speechSynthesis.cancel();speechSynthesis.speak(u)}}>🔊 Play word</button>
+            <input className="w-full border rounded-xl p-3 mt-4" value={writeAnswer} onChange={e=>setWriteAnswer(e.target.value)} placeholder="Type what you hear…"/><button className="primary-btn mt-3" type="submit">Check</button><p className="mt-4 font-bold">{writeFeedback}</p>
+          </form>
+        )}
+        {mode === 'speak' && (
+          <div className="card p-6 text-center"><div className="flex flex-wrap justify-center gap-2 mb-5">{metaChips(current)}</div><h3 className="flash-word">{current.word}</h3><p>Say the word or expression aloud.</p><button className="primary-btn mt-3" type="button" onClick={()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setSpeechFeedback('Speech recognition is not available in this browser.');return;}const rec=new SR();rec.lang='en-GB';rec.interimResults=false;rec.onresult=(e)=>{const heard=e.results[0][0].transcript;setSpeechFeedback(`I heard: “${heard}”${norm(heard)===norm(current.word)?' ✓':' — compare and try again.'}`);setShowRating(true)};rec.onerror=()=>setSpeechFeedback('Could not hear that clearly — try again.');rec.start();}}>🎙 Start listening</button><p className="mt-4 font-bold">{speechFeedback}</p></div>
+        )}
+        {mode === 'natural-choice' && (
+          <div className="card p-6"><h3 className="section-heading mb-5">{promptText(current,mode)}</h3><div className="grid gap-3">{multipleOptions.map((o,i)=><button key={i} className={`answer-option ${selectedAns!==null?(norm(o)===norm(correctAns)?'correct':i===selectedAns?'wrong':''):''}`} disabled={selectedAns!==null} onClick={()=>{setSelectedAns(i);setMultipleFeedback(norm(o)===norm(correctAns)?'Yes — that is the most natural choice here.':`Best choice: ${correctAns}`);setShowRating(true)}}>{o}</button>)}</div><p className="mt-4 font-bold">{multipleFeedback}</p></div>
+        )}
+
+        {(mode === 'write' || mode === 'en-es' || mode === 'es-en' || mode === 'context-gap' || mode === 'one-minute') && (
           <form className="card p-6" onSubmit={(e) => {
             e.preventDefault();
-            const translation = ['es-en', 'en-es'].includes(mode);
-            const ok = translation && norm(writeAnswer) === norm(correctAns);
-            setWriteFeedback(ok ? 'Correct — great recall!' : translation ? `Suggested answer: ${correctAns}` : `Compare your answer with: ${correctAns}`);
+            const exactMode = ['es-en', 'en-es', 'context-gap', 'one-minute'].includes(mode);
+            const ok = exactMode && norm(writeAnswer) === norm(correctAns);
+            setWriteFeedback(ok ? 'Correct — great recall!' : exactMode ? `Suggested answer: ${correctAns}` : `Compare your answer with: ${correctAns}`);
             setShowRating(true);
           }}>
             <div className="flex flex-wrap gap-2 mb-6">{metaChips(current)}</div>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2, Zap } from 'lucide-react';
 
 function speakWord(text, lang = 'en-US') {
@@ -163,8 +163,10 @@ function fuzzyMatch(record, query) {
   return tokens.every((t) => fields.some((field) => textHasFuzzyToken(field, t)));
 }
 
-function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, showAttention }) {
+function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, showAttention, displayMode='cozy', onQuickReview }) {
   const [confirmDel, setConfirmDel] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
+  const touch = useRef({x:0,y:0,t:0,timer:null});
   const tags = String(record.tags || '').split(',').map((x) => x.trim()).filter(Boolean);
   const isTrick = record.type === 'Grammar / Trick';
 
@@ -179,7 +181,25 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
   };
 
   return (
-    <article className="card entry-card" onClick={() => onOpen(record)}>
+    <article
+      className={`card entry-card view-${displayMode}`}
+      onClick={() => onOpen(record)}
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        touch.current = { x: t.clientX, y: t.clientY, t: Date.now(), timer: setTimeout(() => setQuickOpen(true), 520) };
+      }}
+      onTouchMove={() => { if (touch.current.timer) clearTimeout(touch.current.timer); }}
+      onTouchEnd={(e) => {
+        if (touch.current.timer) clearTimeout(touch.current.timer);
+        const t = e.changedTouches[0];
+        const dx = t.clientX - touch.current.x;
+        if (Math.abs(dx) > 70) {
+          e.preventDefault();
+          if (dx > 0) onToggleFav(record);
+          else onQuickReview?.(record);
+        }
+      }}
+    >
       <div style={{ position: 'absolute', right: '15px', top: '15px', display: 'flex', gap: '6px' }}>
         <button
           className={`favourite-toggle ${record.is_favourite ? 'is-fav' : ''}`}
@@ -272,6 +292,7 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
         {record.needs_review && <Chip kind="level">Review</Chip>}
         {showAttention && attentionReasons(record).map((reason) => <span key={reason} className="attention-reason">{reason}</span>)}
       </div>
+      {quickOpen && <div className="longpress-menu" onClick={(e)=>e.stopPropagation()}><button onClick={()=>{onOpen(record);setQuickOpen(false)}}>Open</button><button onClick={()=>{onToggleFav(record);setQuickOpen(false)}}>{record.is_favourite?'Unfavourite':'Favourite'}</button><button onClick={()=>{onQuickReview?.(record);setQuickOpen(false)}}>{record.needs_review?'Unmark review':'Review later'}</button><button onClick={()=>setQuickOpen(false)}>Close</button></div>}
     </article>
   );
 }
@@ -280,11 +301,26 @@ export default function LibraryView({
   records, currentView, librarySpecificType, setLibrarySpecificType,
   tagFilter, setTagFilter, topicFilter, setTopicFilter,
   extraFilter, setExtraFilter,
-  search, onOpenDetail, onToggleFav, onDelete, onNavigate, onOpenCategory, onExport, onImport, onOpenTag,
+  search, onSearchChange, onOpenDetail, onToggleFav, onDelete, onNavigate, onOpenCategory, onExport, onImport, onOpenTag, onQuickReview,
 }) {
-  const [filters, setFilters] = useState({ type: '', level: '', register: '', variety: '', status: '', topic: '', tags: '' });
+  const [filters, setFilters] = useState({ type: '', level: '', register: '', variety: '', status: '', topic: '', tags: '', semantic_field: '' });
   const [sort, setSort] = useState('newest');
   const [pills, setPills] = useState({ favourite: false, difficult: false, reviewing: false });
+  const [displayMode, setDisplayMode] = useState(() => localStorage.getItem('ev-library-view') || 'cozy');
+  const [savedSearches, setSavedSearches] = useState(() => { try { return JSON.parse(localStorage.getItem('ev-saved-searches') || '[]'); } catch { return []; } });
+  const [saveName, setSaveName] = useState('');
+  useEffect(()=>localStorage.setItem('ev-library-view',displayMode),[displayMode]);
+  useEffect(()=>localStorage.setItem('ev-saved-searches',JSON.stringify(savedSearches)),[savedSearches]);
+  useEffect(() => {
+    if (extraFilter?.key !== 'saved_view' || !extraFilter.value) return;
+    const v = extraFilter.value;
+    setFilters(v.filters || { type:'', level:'', register:'', variety:'', status:'', topic:'', tags:'', semantic_field:'' });
+    setPills(v.pills || { favourite:false, difficult:false, reviewing:false });
+    setSort(v.sort || 'newest');
+    setTagFilter(v.tagFilter || '');
+    setTopicFilter(v.topicFilter || '');
+    onSearchChange?.(v.search || '');
+  }, [extraFilter]);
 
   const [title, description] = headings[currentView] || ['Library', ''];
   const isSearching = !!(search && search.trim());
@@ -315,7 +351,8 @@ export default function LibraryView({
     }
     if (extraFilter && extraFilter.value) {
       const { key, value } = extraFilter;
-      if (key === 'status') r = r.filter((x) => (x.status || 'New') === value);
+      if (key === 'saved_view') { /* local filter state already restored above */ }
+      else if (key === 'status') r = r.filter((x) => (x.status || 'New') === value);
       else if (key === 'needs_attention') r = r.filter((x) => {
         if (x.type === 'Grammar / Trick') return !(x.rule || x.transitive) || !(x.explanation || x.how_common) || !(x.common_mistakes || x.notes);
         return !x.meaning || !x.spanish || !x.example || !x.common_mistakes || !x.pronunciation_easy;
@@ -359,7 +396,7 @@ export default function LibraryView({
   }, [records, currentView, librarySpecificType, tagFilter, topicFilter, extraFilter, search, filters, sort, pills]);
 
   const clearFilters = () => {
-    setFilters({ type: '', level: '', register: '', variety: '', status: '', topic: '', tags: '' });
+    setFilters({ type: '', level: '', register: '', variety: '', status: '', topic: '', tags: '', semantic_field: '' });
     setPills({ favourite: false, difficult: false, reviewing: false });
     setTagFilter('');
     setTopicFilter('');
@@ -375,6 +412,12 @@ export default function LibraryView({
       else { const map = { 'Vocabulary': 'vocabulary', 'Verb': 'verbs', 'Slang': 'slang', 'Phrasal Verb': 'phrasal', 'Connector / Linker': 'connectors', 'Grammar / Trick': 'tricks' }; if (map[value]) onNavigate(map[value]); }
     } else if (setExtraFilter) setExtraFilter({ key: kind, value });
   };
+
+  const saveCurrentSearch = () => {
+    const name = saveName.trim() || `Saved view ${savedSearches.length + 1}`;
+    setSavedSearches((x)=>[...x.filter(v=>v.name!==name), {name,filters,pills,sort,tagFilter,topicFilter,search}]); setSaveName('');
+  };
+  const applySavedSearch = (v) => { setFilters(v.filters||{}); setPills(v.pills||{}); setSort(v.sort||'newest'); setTagFilter(v.tagFilter||''); setTopicFilter(v.topicFilter||''); onSearchChange?.(v.search||''); };
 
   const mobileCats = [
     { id: 'vocabulary', label: 'Vocabulary', icon: BookMarked },
@@ -456,7 +499,7 @@ export default function LibraryView({
           )}
           {extraFilter && extraFilter.value && (
             <span className={`chip chip-${extraFilter.key === 'level' ? 'level' : extraFilter.key === 'register' ? 'register' : extraFilter.key === 'variety' ? 'variety' : extraFilter.key === 'needs_attention' ? 'type' : 'status'} inline-flex items-center gap-1`} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
-              {extraFilter.key === 'needs_attention' ? 'Needs attention' : extraFilter.key === 'smart_collection' ? `Collection: ${extraFilter.value.replace(/-/g,' ')}` : `${extraFilter.key.charAt(0).toUpperCase() + extraFilter.key.slice(1)}: ${extraFilter.value}`}
+              {extraFilter.key === 'needs_attention' ? 'Needs attention' : extraFilter.key === 'smart_collection' ? `Collection: ${extraFilter.value.replace(/-/g,' ')}` : extraFilter.key === 'saved_view' ? `Pinned: ${extraFilter.value?.name || 'saved view'}` : `${extraFilter.key.charAt(0).toUpperCase() + extraFilter.key.slice(1)}: ${extraFilter.value}`}
               <button type="button" onClick={() => setExtraFilter && setExtraFilter(null)} aria-label="Remove filter" style={{ background: 'transparent', border: 0, cursor: 'pointer', padding: 0, marginLeft: '4px', display: 'inline-flex' }}>
                 <X size={13} />
               </button>
@@ -504,6 +547,9 @@ export default function LibraryView({
           <div className="field"><label>TAGS</label>
             <input value={filters.tags} onChange={(e) => setFilters({ ...filters, tags: e.target.value })} placeholder="Any tag" />
           </div>
+          <div className="field"><label>SEMANTIC FIELD</label>
+            <input value={filters.semantic_field || ''} onChange={(e) => setFilters({ ...filters, semantic_field: e.target.value })} placeholder="e.g. confusion" />
+          </div>
           <div className="field"><label>SORT BY</label>
             <select value={sort} onChange={(e) => setSort(e.target.value)}>
               <option value="newest">Newest</option>
@@ -519,13 +565,14 @@ export default function LibraryView({
           <button className="soft-btn text-xs py-2" style={pills.reviewing ? { background: '#fbe4ec', borderColor: '#d986a5', color: '#9d4f6e' } : {}} onClick={() => setPills({ ...pills, reviewing: !pills.reviewing })}>↻ Need to review</button>
           <button className="text-xs font-bold px-2 bg-transparent border-0" style={{ color: '#9d4f6e', cursor: 'pointer' }} onClick={clearFilters}>Clear filters</button>
         </div>
+        <div className="library-tools mt-4"><div className="view-switch"><span>Card view</span>{['cozy','compact'].map(v=><button key={v} className={displayMode===v?'active':''} onClick={()=>setDisplayMode(v)}>{v}</button>)}</div><div className="saved-searches"><input value={saveName} onChange={e=>setSaveName(e.target.value)} placeholder="Name this filter view"/><button className="soft-btn" type="button" onClick={saveCurrentSearch}>Save filters</button>{savedSearches.map((v,i)=><span key={v.name}><button type="button" className="saved-view-chip" onClick={()=>applySavedSearch(v)}>{v.name}</button><button className="saved-view-x" onClick={()=>setSavedSearches(x=>x.filter((_,j)=>j!==i))}>×</button></span>)}</div></div>
       </div>
 
-      <div className={`grid sm:grid-cols-2 xl:grid-cols-3 gap-4 ${currentView === 'tricks' ? 'tricks-layout' : ''}`}>
+      <div className={`grid ${displayMode==='compact'?'sm:grid-cols-2 xl:grid-cols-4':'sm:grid-cols-2 xl:grid-cols-3'} gap-4 ${currentView === 'tricks' ? 'tricks-layout' : ''}`}>
         {filtered.length === 0 ? (
           <div className="empty-box sm:col-span-2 xl:col-span-3">No entries match this view yet. Add a new discovery to begin.</div>
         ) : filtered.map((r) => (
-          <EntryCard key={r.__backendId} record={r} onOpen={onOpenDetail} onToggleFav={onToggleFav} onDelete={onDelete} query={search} onTagClick={handleTagClick} showAttention={extraFilter?.key === 'needs_attention'} />
+          <EntryCard key={r.__backendId} record={r} onOpen={onOpenDetail} onToggleFav={onToggleFav} onDelete={onDelete} query={search} onTagClick={handleTagClick} showAttention={extraFilter?.key === 'needs_attention'} displayMode={displayMode} onQuickReview={onQuickReview} />
         ))}
       </div>
 

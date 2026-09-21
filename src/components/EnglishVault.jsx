@@ -7,7 +7,7 @@ import PracticeView from './PracticeView';
 import EntryModal from './EntryModal';
 import DetailModal from './DetailModal';
 import SurpriseDiscoveryModal from './SurpriseDiscoveryModal';
-import { Search, Dice5, Plus, House, LibraryBig, GraduationCap, Heart, LogOut, RefreshCw } from 'lucide-react';
+import { Search, Dice5, Plus, House, LibraryBig, GraduationCap, Heart, LogOut, RefreshCw, Palette } from 'lucide-react';
 import { normalizeEntryText, isDue } from '../lib/vaultUtils';
 
 export default function EnglishVault({ session, onSignOut }) {
@@ -29,6 +29,8 @@ export default function EnglishVault({ session, onSignOut }) {
   const [toast, setToast] = useState(null);
   const [practiceBatch, setPracticeBatch] = useState([]);
   const [practiceToken, setPracticeToken] = useState(0);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('ev-theme') || 'pink');
   const toastTimer = useRef(null);
   const undoBufferRef = useRef(null);
 
@@ -94,6 +96,15 @@ export default function EnglishVault({ session, onSignOut }) {
     setLibraryTagFilter('');
     setLibraryTopicFilter('');
     setLibraryExtraFilter({ key: 'smart_collection', value: id });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openSavedView = (view) => {
+    setCurrentView('vocabulary');
+    setLibrarySpecificType('');
+    setLibraryTagFilter('');
+    setLibraryTopicFilter('');
+    setLibraryExtraFilter({ key: 'saved_view', value: view });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -200,6 +211,11 @@ export default function EnglishVault({ session, onSignOut }) {
     const next = { ...record, is_favourite: !record.is_favourite };
     update(next);
     setDetailRecord((current) => current && current.__backendId === record.__backendId ? { ...current, is_favourite: next.is_favourite } : current);
+  };
+
+  const handleQuickReview = (record) => {
+    update({ ...record, needs_review: !record.needs_review, status: record.status || 'New' });
+    showToast(record.needs_review ? 'Removed from review queue.' : 'Added to review queue.');
   };
 
   const handleStatusChange = (record, status) => {
@@ -309,6 +325,19 @@ export default function EnglishVault({ session, onSignOut }) {
   };
 
   useEffect(() => {
+    const apply = () => {
+      const resolved = theme === 'system' ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'pink') : theme;
+      document.documentElement.setAttribute('data-vault-theme', resolved);
+      localStorage.setItem('ev-theme', theme);
+    };
+    apply();
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+    const cb = () => theme === 'system' && apply();
+    mq?.addEventListener?.('change', cb);
+    return () => mq?.removeEventListener?.('change', cb);
+  }, [theme]);
+
+  useEffect(() => {
     // Cleanup toast timer on unmount
     return () => { if (toastTimer.current) clearTimeout(toastTimer.current); };
   }, []);
@@ -321,6 +350,7 @@ export default function EnglishVault({ session, onSignOut }) {
         <header className="topbar">
           <div className="mobile-quick-actions">
             <button className="soft-btn" type="button" onClick={handleSurprise}><Dice5 size={17} /> Surprise me</button>
+            <div className="appearance-wrap mobile-appearance"><button className="soft-btn" type="button" onClick={()=>setAppearanceOpen(!appearanceOpen)}><Palette size={17}/> Theme</button>{appearanceOpen && <div className="appearance-menu"><strong>Appearance</strong>{[['pink','Pink'],['lavender','Lavender'],['sage','Sage'],['blue','Blue'],['dark','Dark pastel'],['system','System']].map(([id,label])=><button key={id} className={theme===id?'active':''} onClick={()=>{setTheme(id);setAppearanceOpen(false)}}>{label}</button>)}</div>}</div>
             <button className="primary-btn" type="button" onClick={openAdd}><Plus size={17} /> Add new</button>
           </div>
           <div className="search-wrap">
@@ -342,6 +372,7 @@ export default function EnglishVault({ session, onSignOut }) {
             />
           </div>
           <div className="flex gap-2">
+            <div className="appearance-wrap"><button className="soft-btn top-action-appearance inline-flex gap-2 items-center" type="button" onClick={()=>setAppearanceOpen(!appearanceOpen)} title="Appearance"><Palette size={18}/></button>{appearanceOpen && <div className="appearance-menu"><strong>Appearance</strong>{[['pink','Pink'],['lavender','Lavender'],['sage','Sage'],['blue','Blue'],['dark','Dark pastel'],['system','System']].map(([id,label])=><button key={id} className={theme===id?'active':''} onClick={()=>{setTheme(id);setAppearanceOpen(false)}}>{label}</button>)}</div>}</div>
             <button className="soft-btn top-action-sync inline-flex gap-2 items-center" type="button" onClick={reload} title="Sync now">
               <RefreshCw size={18} />
             </button>
@@ -380,6 +411,7 @@ export default function EnglishVault({ session, onSignOut }) {
             onStartDue={handleStartDue}
             onNeedsAttention={openNeedsAttention}
             onSmartCollection={openSmartCollection}
+            onOpenSavedView={openSavedView}
           />
         )}
 
@@ -396,6 +428,7 @@ export default function EnglishVault({ session, onSignOut }) {
             extraFilter={libraryExtraFilter}
             setExtraFilter={setLibraryExtraFilter}
             search={search}
+            onSearchChange={setSearch}
             onOpenDetail={setDetailRecord}
             onToggleFav={handleToggleFav}
             onDelete={handleDelete}
@@ -404,6 +437,7 @@ export default function EnglishVault({ session, onSignOut }) {
             onExport={handleExport}
             onImport={handleImport}
             onOpenTag={openLibraryWithTag}
+            onQuickReview={handleQuickReview}
           />
         )}
 
