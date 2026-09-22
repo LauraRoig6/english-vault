@@ -11,26 +11,28 @@ const emptyForm = {
   synonyms: '', antonyms: '', related: '', pattern_structure: '', confused_with: '', usage_warning: '', pronunciation_easy: '', word_family: '', typical_collocations: '', best_for: '', avoid_overusing: '', mini_contrast: '', word_class: '', frequency: '', naturalness_score: '', naturalness_label: '', native_alternative: '', useful_for_exams: '', register_ladder: '', my_mistakes: '', personal_difficulty: '', confidence: '', why_useful: '', false_friend: '', etymology: '', variety_usage: '', collocation_mistake: '', sounds_better_as: '', semantic_field: '', personal_note: '', separable: '', transitive: '', similar_expressions: '',
   how_common: '', offensive_warning: '', slang_tags: '',
   trick_category: '', rule: '', explanation: '', quick_summary: '', visual_scheme: '', choni_explanation: '', examples_list: '', exceptions: '', memory_trick: '', common_mistakes: '',
+  simple_explanation: '', friend_explanation: '', memory_hook: '', typical_situation: '', classification_confidence: '', classification_note: '',
   is_favourite: false, is_difficult: false, is_known: false, needs_review: true, i_confuse_this: false,
 };
 
 function copyTemplate(word = '', type = 'Vocabulary') {
   const common = [
-    ['TYPE', type], ['WORD / EXPRESSION', String(word || '').trim().toLowerCase()], ['MEANING IN ENGLISH', ''], ['SPANISH', ''],
+    ['TYPE', ''], ['WORD / EXPRESSION', String(word || '').trim().toLowerCase()], ['MEANING IN ENGLISH', ''], ['SPANISH', ''],
     ['EASY PRONUNCIATION', ''], ['NATURAL EXAMPLE', ''], ['MY EXAMPLE', ''], ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''],
     ['SYNONYMS', ''], ['RELATED EXPRESSIONS', ''], ['ANTONYMS', ''], ['WORD FAMILY', ''], ['TYPICAL COLLOCATIONS', ''],
     ['FREQUENCY', ''], ['NATURALNESS SCORE', ''], ['NATURALNESS LABEL', ''], ['BEST FOR', ''], ['USEFUL FOR EXAMS', ''], ['NATIVE ALTERNATIVE', ''],
     ['REGISTER LADDER', ''], ['WHY IS THIS USEFUL?', ''],
     ['COMMON COLLOCATION MISTAKE', ''], ['SEMANTIC FIELD', ''],
-    ['PATTERN / STRUCTURE', ''], ['CONFUSED WITH', ''], ['MINI CONTRAST', ''], ['AVOID OVERUSING', ''], ['USAGE WARNING', ''], ['COMMON MISTAKES', ''], ['NOTES', ''],
+    ['PATTERN / STRUCTURE', ''], ['CONFUSED WITH', ''], ['MINI CONTRAST', ''], ['AVOID OVERUSING', ''], ['USAGE WARNING', ''],
+    ['SIMPLE EXPLANATION (SPANISH)', ''], ['EXPLAIN IT LIKE MY FRIEND', ''], ['ONE-LINE MEMORY HOOK', ''], ['TYPICAL SITUATION', ''], ['DON\'T SAY THIS', ''], ['NOTES', ''],
   ];
   if (type === 'Vocabulary') common.splice(15, 0, ['WORD CLASS', '']);
   if (type === 'Phrasal Verb') common.splice(-3, 0, ['PHRASAL: SEPARABLE?', ''], ['PHRASAL: TRANSITIVITY', ''], ['RELATED PHRASAL VERBS', '']);
   if (type === 'Slang') common.splice(-3, 0, ['SLANG: HOW COMMON?', ''], ['SLANG TAGS', '']);
   if (type === 'Grammar / Trick') {
     return `NEW DISCOVERY\n\n${[
-      ['TYPE', type], ['WORD / EXPRESSION', String(word || '').trim().toLowerCase()], ['MEANING IN ENGLISH', ''], ['SPANISH', ''], ['NATURAL EXAMPLE', ''], ['MY EXAMPLE', ''],
-      ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''], ['TRICK CATEGORY', ''], ['QUICK SUMMARY', ''], ['RULE', ''], ['VISUAL SCHEME', ''], ['EXPLANATION', ''], ['CHONI EXPLANATION', ''], ['EXAMPLES', ''], ['EXCEPTIONS', ''], ['MEMORY TRICK', ''], ['COMMON MISTAKES', ''], ['NOTES', ''],
+      ['TYPE', ''], ['WORD / EXPRESSION', String(word || '').trim().toLowerCase()], ['MEANING IN ENGLISH', ''], ['SPANISH', ''], ['NATURAL EXAMPLE', ''], ['MY EXAMPLE', ''],
+      ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''], ['TRICK CATEGORY', ''], ['QUICK SUMMARY', ''], ['RULE', ''], ['VISUAL SCHEME', ''], ['EXPLANATION', ''], ['CHONI EXPLANATION', ''], ['EXAMPLES', ''], ['EXCEPTIONS', ''], ['MEMORY TRICK', ''], ['DON\'T SAY THIS', ''], ['NOTES', ''],
     ].map(([k,v]) => `${k}: ${v}`).join('\n')}`;
   }
   return `NEW DISCOVERY\n\n${common.map(([k,v]) => `${k}: ${v}`).join('\n')}`;
@@ -128,7 +130,7 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       pattern_structure: form.pattern_structure, confused_with: form.confused_with, usage_warning: form.usage_warning,
       pronunciation_easy: form.pronunciation_easy, word_family: form.word_family, typical_collocations: form.typical_collocations,
       best_for: form.best_for, avoid_overusing: form.avoid_overusing, mini_contrast: form.mini_contrast,
-      antonyms: form.antonyms, word_class: form.word_class, frequency: form.frequency, naturalness_score: form.naturalness_score ? Number(form.naturalness_score) : 0, naturalness_label: form.naturalness_label, native_alternative: form.native_alternative, useful_for_exams: form.useful_for_exams, register_ladder: form.register_ladder, my_mistakes: form.my_mistakes, personal_difficulty: form.personal_difficulty, confidence: form.confidence, why_useful: form.why_useful, false_friend: form.false_friend, etymology: form.etymology, variety_usage: form.variety_usage, collocation_mistake: form.collocation_mistake, sounds_better_as: form.sounds_better_as, semantic_field: form.semantic_field, personal_note: form.personal_note,
+      antonyms: form.antonyms, word_class: form.word_class, frequency: form.frequency, naturalness_score: form.naturalness_score ? (Number(String(form.naturalness_score).match(/[1-5]/)?.[0]) || 0) : 0, naturalness_label: form.naturalness_label, native_alternative: form.native_alternative, useful_for_exams: form.useful_for_exams, register_ladder: form.register_ladder, my_mistakes: form.my_mistakes, personal_difficulty: form.personal_difficulty, confidence: form.confidence, why_useful: form.why_useful, false_friend: form.false_friend, etymology: form.etymology, variety_usage: form.variety_usage, collocation_mistake: form.collocation_mistake, sounds_better_as: form.sounds_better_as, semantic_field: form.semantic_field, personal_note: form.personal_note,
       is_favourite: form.is_favourite, is_difficult: form.is_difficult, is_known: form.is_known, needs_review: form.needs_review, i_confuse_this: !!form.i_confuse_this,
       status: form.is_known ? 'Mastered' : (form.status || 'New'),
       separable: isTrick ? form.trick_category : form.separable,
@@ -139,6 +141,12 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       offensive_warning: isTrick ? form.exceptions : (form.type === 'Slang' ? (form.usage_warning || form.offensive_warning) : form.offensive_warning),
       notes: form.notes,
       common_mistakes: form.common_mistakes,
+      simple_explanation: form.simple_explanation,
+      friend_explanation: form.friend_explanation,
+      memory_hook: form.memory_hook,
+      typical_situation: form.typical_situation,
+      classification_confidence: form.classification_confidence,
+      classification_note: form.classification_note,
       trick_category: form.trick_category, rule: form.rule, explanation: form.explanation, quick_summary: form.quick_summary, visual_scheme: form.visual_scheme, choni_explanation: form.choni_explanation, examples_list: form.examples_list, exceptions: form.exceptions, memory_trick: form.memory_trick,
       similar_expressions: form.similar_expressions,
       slang_tags: form.slang_tags,
@@ -155,10 +163,6 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
   };
 
   const handleQuickFill = () => {
-    console.log('=== handleQuickFill called ===');
-    console.log('quickText length:', quickText.length);
-    console.log('quickText:', quickText);
-    
     const fieldMap = {
       'TYPE': 'type',
       'WORD / EXPRESSION': 'word',
@@ -208,37 +212,47 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
       'EXCEPTIONS': 'exceptions',
       'MEMORY TRICK': 'memory_trick',
       'COMMON MISTAKES': 'common_mistakes',
+      "DON'T SAY THIS": 'common_mistakes',
+      'SIMPLE EXPLANATION (SPANISH)': 'simple_explanation',
+      'EXPLAIN IT LIKE MY FRIEND': 'friend_explanation',
+      'ONE-LINE MEMORY HOOK': 'memory_hook',
+      'TYPICAL SITUATION': 'typical_situation',
       'NOTES': 'notes',
     };
     const sortedKeys = Object.keys(fieldMap).sort((a, b) => b.length - a.length);
-    console.log('sortedKeys:', sortedKeys);
-    
     const updates = {};
-    const lines = quickText.split(/\r?\n/);
-    console.log('Total lines:', lines.length);
-    
-    lines.forEach((line, index) => {
-      const trimmedLine = line.trim();
-      const upper = trimmedLine.toUpperCase();
+    let activeKey = null;
+
+    quickText.split(/\r?\n/).forEach((line) => {
+      const trimmed = line.trim();
+      const upper = trimmed.toUpperCase();
       const key = sortedKeys.find((k) => upper.startsWith(k + ':'));
       if (key) {
-        const v = trimmedLine.slice(key.length + 1).trim();
-        updates[fieldMap[key]] = v === '—' ? '' : v;
-        console.log(`Line ${index}: Matched key "${key}" -> field "${fieldMap[key]}" = "${v}"`);
+        activeKey = key;
+        const value = trimmed.slice(key.length + 1).trim();
+        updates[fieldMap[key]] = value === '—' ? '' : value;
+        return;
+      }
+      // Preserve multiline content (especially NOTES and the Spanish learning fields)
+      // until the next recognised FIELD: line.
+      if (activeKey && trimmed) {
+        const target = fieldMap[activeKey];
+        const previous = updates[target] || '';
+        updates[target] = `${previous}${previous ? '\n' : ''}${trimmed}`;
       }
     });
-    
-    console.log('Final updates object:', updates);
-    console.log('Number of fields to update:', Object.keys(updates).length);
-    
+
     setForm((f) => {
-      console.log('Previous form state:', f);
       if (updates.word) updates.word = String(updates.word).toLowerCase();
-      const newForm = { ...f, ...updates };
-      console.log('New form state:', newForm);
-      return newForm;
+      const allowedTypes = typeOptions;
+      if (updates.type && !allowedTypes.includes(updates.type)) {
+        updates.classification_note = `Template suggested an unknown type: ${updates.type}`;
+        updates.classification_confidence = 'Needs review';
+        delete updates.type;
+      }
+      return { ...f, ...updates };
     });
-    setQuickStatus('Form filled — review before saving ✨');
+    setQuickStatus('Form filled — including Notes and study explanations ✨');
   };
 
   const handleCopyTemplate = async () => {
@@ -439,12 +453,17 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
               <div className="field md:col-span-2"><label>EXAMPLES</label><textarea value={form.examples_list} onChange={(e) => set('examples_list', e.target.value)} /></div>
               <div className="field"><label>EXCEPTIONS</label><textarea value={form.exceptions} onChange={(e) => set('exceptions', e.target.value)} /></div>
               <div className="field"><label>MEMORY TRICK</label><textarea value={form.memory_trick} onChange={(e) => set('memory_trick', e.target.value)} /></div>
-              <div className="field md:col-span-2"><label>COMMON MISTAKES</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} /></div>
+              <div className="field md:col-span-2"><label>DON'T SAY THIS</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} /></div>
               <div className="field md:col-span-2"><label>NOTES</label><textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
             </>}
             {!isTrick && <>
-              <div className="field md:col-span-2"><label>COMMON MISTAKES</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} /></div>
+              <div className="field md:col-span-2"><label>SIMPLE EXPLANATION · SPANISH</label><textarea value={form.simple_explanation} onChange={(e) => set('simple_explanation', e.target.value)} placeholder="Explicación muy sencilla en español; puede usar **negrita** y *cursiva*." /></div>
+              <div className="field md:col-span-2"><label>EXPLAIN IT LIKE MY FRIEND</label><textarea value={form.friend_explanation} onChange={(e) => set('friend_explanation', e.target.value)} placeholder="Explícamelo como una amiga: cercano, memorable y correcto." /></div>
+              <div className="field"><label>ONE-LINE MEMORY HOOK</label><input value={form.memory_hook} onChange={(e) => set('memory_hook', e.target.value)} /></div>
+              <div className="field"><label>TYPICAL SITUATION</label><input value={form.typical_situation} onChange={(e) => set('typical_situation', e.target.value)} /></div>
+              <div className="field md:col-span-2"><label>DON'T SAY THIS</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} placeholder="❌ common mistake → ✅ natural/correct version" /></div>
               <div className="field md:col-span-2"><label>NOTES</label><textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
+              {form.classification_confidence === 'Needs review' && <div className="md:col-span-2" style={{padding:'10px 12px',borderRadius:12,background:'#fff7df',border:'1px solid #ead59a',color:'#846821',fontSize:'.82rem'}}><strong>AI type check:</strong> {form.classification_note || 'The category is uncertain. Please review TYPE before saving.'}</div>}
             </>}
           </div>
 

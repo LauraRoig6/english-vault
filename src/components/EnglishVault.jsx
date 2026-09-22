@@ -22,6 +22,10 @@ export default function EnglishVault({ session, onSignOut }) {
   const [editingRecord, setEditingRecord] = useState(null);
   const [prefillRecord, setPrefillRecord] = useState(null);
   const [detailRecord, setDetailRecord] = useState(null);
+  const [detailHistory, setDetailHistory] = useState([]);
+  const [recentViewedIds, setRecentViewedIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ev-recent-viewed') || '[]'); } catch { return []; }
+  });
   const [surpriseModalOpen, setSurpriseModalOpen] = useState(false);
   const [surpriseSuggestion, setSurpriseSuggestion] = useState(null);
   const [surpriseLoading, setSurpriseLoading] = useState(false);
@@ -129,6 +133,37 @@ export default function EnglishVault({ session, onSignOut }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const rememberViewed = (record) => {
+    if (!record?.__backendId) return;
+    setRecentViewedIds((current) => {
+      const next = [record.__backendId, ...current.filter((id) => id !== record.__backendId)].slice(0, 8);
+      localStorage.setItem('ev-recent-viewed', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const openDetail = (record, rememberPrevious = true) => {
+    if (!record) return;
+    if (rememberPrevious && detailRecord?.__backendId && detailRecord.__backendId !== record.__backendId) {
+      setDetailHistory((h) => [...h, detailRecord.__backendId].slice(-12));
+    }
+    setDetailRecord(record);
+    rememberViewed(record);
+  };
+
+  const backDetail = () => {
+    setDetailHistory((history) => {
+      if (!history.length) return history;
+      const previousId = history[history.length - 1];
+      const previous = records.find((r) => r.__backendId === previousId);
+      if (previous) {
+        setDetailRecord(previous);
+        rememberViewed(previous);
+      }
+      return history.slice(0, -1);
+    });
+  };
+
   const openAdd = () => {
     setEditingRecord(null);
     setPrefillRecord(null);
@@ -147,7 +182,7 @@ export default function EnglishVault({ session, onSignOut }) {
     const target = normalizeEntryText(item);
     const found = records.find((r) => normalizeEntryText(r.word) === target);
     if (found) {
-      setDetailRecord(found);
+      openDetail(found);
       return;
     }
     setDetailRecord(null);
@@ -261,7 +296,7 @@ export default function EnglishVault({ session, onSignOut }) {
       return;
     }
     const random = records[Math.floor(Math.random() * records.length)];
-    setDetailRecord(random);
+    openDetail(random, false);
     showToast(`From your vault: “${random.word}”`);
   };
 
@@ -412,7 +447,8 @@ export default function EnglishVault({ session, onSignOut }) {
             onNavigate={openView}
             onOpenCategory={openCategory}
             onOpenAdd={openAdd}
-            onOpenDetail={setDetailRecord}
+            onOpenDetail={(r) => openDetail(r, false)}
+            recentViewed={recentViewedIds.map((id) => records.find((r) => r.__backendId === id)).filter(Boolean)}
             onDiscoverSurprise={handleDiscoverSurprise}
             surpriseLoading={surpriseLoading}
             onStartDue={handleStartDue}
@@ -436,7 +472,7 @@ export default function EnglishVault({ session, onSignOut }) {
             setExtraFilter={setLibraryExtraFilter}
             search={search}
             onSearchChange={setSearch}
-            onOpenDetail={setDetailRecord}
+            onOpenDetail={(r) => openDetail(r, false)}
             onToggleFav={handleToggleFav}
             onDelete={handleDelete}
             onNavigate={openView}
@@ -496,7 +532,8 @@ export default function EnglishVault({ session, onSignOut }) {
       {detailRecord && (
         <DetailModal
           record={detailRecord}
-          onClose={() => setDetailRecord(null)}
+          onClose={() => { setDetailRecord(null); setDetailHistory([]); }}
+          onBackRecord={detailHistory.length ? backDetail : null}
           onEdit={openEdit}
           onDelete={handleDelete}
           onToggleFav={handleToggleFav}

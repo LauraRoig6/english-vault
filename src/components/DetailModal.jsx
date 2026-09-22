@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { X, Heart, Volume2, Share2, Sparkles, Languages, GraduationCap, AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, Check, GitCompareArrows, WandSparkles, MessageSquareText, BookOpenCheck, School, Clock3 } from 'lucide-react';
+import { X, Heart, Volume2, Share2, ArrowLeft, Sparkles, Languages, GraduationCap, AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, Check, GitCompareArrows, WandSparkles, MessageSquareText, BookOpenCheck, School, Clock3 } from 'lucide-react';
 import { splitList, normalizeEntryText } from '../lib/vaultUtils';
 
 function speak(text, lang) {
@@ -100,7 +100,7 @@ function TrickExamples({ value }) {
   return <section className="trick-examples-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXAMPLES</p><div className="trick-example-grid">{items.slice(0,8).map((x,i)=><div key={i} className="trick-example-item"><span>{i+1}</span><p>{x}</p></div>)}</div></section>;
 }
 
-export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz, allRecords = [], onStatusChange, onUpdate }) {
+export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz, allRecords = [], onStatusChange, onUpdate, onBackRecord }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [contextExamples, setContextExamples] = useState(null);
   const [contextTab, setContextTab] = useState(0);
@@ -130,6 +130,10 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
   ].filter(([, v]) => v);
 
   const isTrick = record.type === 'Grammar / Trick';
+  const completenessChecks = isTrick
+    ? [record.rule || record.transitive, record.explanation || record.how_common, record.common_mistakes || record.notes]
+    : [record.meaning, record.spanish, record.example, record.pronunciation_easy, record.common_mistakes, record.simple_explanation, record.friend_explanation];
+  const missingCount = completenessChecks.filter((x) => !String(x || '').trim()).length;
   const usageWarning = record.usage_warning || (!isTrick ? record.offensive_warning : '');
 
   const fields = isTrick ? [] : [
@@ -137,7 +141,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
     ['Why this is useful', record.why_useful], ['Semantic field', record.semantic_field], ['Common collocation mistake', record.collocation_mistake], ['Native alternative', record.native_alternative], ['Useful for exams', record.useful_for_exams], ['Register ladder', record.register_ladder],
     ['Pattern / structure', record.pattern_structure],
     ['Best for', record.best_for], ['Avoid overusing', record.avoid_overusing], ['Mini contrast', record.mini_contrast],
-    ['Common mistakes', record.common_mistakes], ['Notes', record.notes],
+    ["Don't say this", record.common_mistakes], ['Notes', record.notes],
     ['Separable', record.separable], ['Transitivity', record.transitive],
     ['How common', record.how_common], ['Slang tags', record.slang_tags],
   ];
@@ -185,6 +189,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
       <article className="modal-panel p-6 md:p-8">
         <div className="flex justify-between items-start gap-3">
           <div>
+            {onBackRecord && <button className="detail-back-link" type="button" onClick={onBackRecord}><ArrowLeft size={14} /> Previous word</button>}
             <p className="eyebrow">{record.type}</p>
             <h2 className="page-title" style={{ display: 'inline' }}>{record.word}</h2>
             <PronounceButtons text={record.word} />
@@ -203,6 +208,9 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
             return <span key={i} onClick={clickable ? () => onTagClick(v, k) : undefined} style={clickable ? { cursor: 'pointer', display: 'inline-block' } : {}} title={clickable ? `Filter by ${v}` : undefined}><Chip kind={k}>{v}</Chip></span>;
           })}
           {!isTrick && <button type="button" className={`chip confuse-toggle ${record.i_confuse_this ? 'active' : ''}`} onClick={() => onUpdate?.(record)} title="You decide whether this belongs in Words I confuse">🧩 {record.i_confuse_this ? 'I confuse this ✓' : 'I confuse this'}</button>}
+          <span className={`chip ${missingCount ? 'chip-register' : 'chip-topic'}`} title={missingCount ? 'Some useful fields are still empty' : 'Core study fields are complete'}>
+            {missingCount ? `${missingCount} missing` : 'Complete ✓'}
+          </span>
           <div className="status-picker">
             <button type="button" className="chip chip-status status-picker-button" onClick={() => setStatusOpen((v) => !v)} title="Change learning status">
               {record.status || 'New'} ▾
@@ -220,8 +228,9 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
         </div>
 
         {!isTrick && (
-          <div className="detail-tabs mt-5" role="tablist" aria-label="Entry sections">
+          <div className="detail-tabs detail-tabs-three mt-5" role="tablist" aria-label="Entry sections">
             <button type="button" className={detailTab === 'general' ? 'active' : ''} onClick={() => setDetailTab('general')}>General</button>
+            <button type="button" className={detailTab === 'easy' ? 'active' : ''} onClick={() => setDetailTab('easy')}>English for dummies</button>
             <button type="button" className={detailTab === 'ai' ? 'active' : ''} onClick={() => setDetailTab('ai')}>AI Study Help</button>
           </div>
         )}
@@ -254,7 +263,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
                 <div className="grid md:grid-cols-2 gap-4">
                   {(record.exceptions || record.offensive_warning) && <section className="trick-warning-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXCEPTIONS</p><p>{record.exceptions || record.offensive_warning}</p></section>}
                   {(record.memory_trick || record.related) && <section className="trick-memory-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">MEMORY TRICK</p><p>{record.memory_trick || record.related}</p></section>}
-                  {(record.common_mistakes || record.notes) && <section className="trick-mistakes-card md:col-span-2"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">COMMON MISTAKES</p><RichText text={record.common_mistakes || record.notes} /></section>}
+                  {(record.common_mistakes || record.notes) && <section className="trick-mistakes-card md:col-span-2"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">DON'T SAY THIS</p><RichText text={record.common_mistakes || record.notes} /></section>}
                   {record.notes && record.common_mistakes && <section className="trick-notes-card md:col-span-2"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">NOTES</p><RichText text={record.notes} /></section>}
                 </div>
               </div>
@@ -304,6 +313,22 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
               </section>
             )}
           </>
+        )}
+
+        {!isTrick && detailTab === 'easy' && (
+          <section className="dummy-study-panel mt-5">
+            <div className="dummy-study-intro">
+              <span>🧠</span>
+              <div><p className="eyebrow m-0">English for dummies</p><h3>Sin tecnicismos innecesarios</h3><small>Explicado en español; las palabras y ejemplos que tienen que ir en inglés se quedan en inglés.</small></div>
+            </div>
+            <div className="dummy-study-grid mt-4">
+              <section className="dummy-card dummy-simple"><p className="detail-block-title">💡 EXPLAIN IT SIMPLY</p><RichText text={record.simple_explanation || 'Todavía no hay explicación sencilla. Edita la ficha o vuelve a pasar Autofill.'} /></section>
+              <section className="dummy-card dummy-friend"><p className="detail-block-title">💅 EXPLÍCAMELO COMO MI AMIGA</p><RichText text={record.friend_explanation || 'Todavía no hay explicación en modo amiga.'} /></section>
+              <section className="dummy-card dummy-hook"><p className="detail-block-title">🪝 ONE-LINE MEMORY HOOK</p><RichText text={record.memory_hook || '—'} /></section>
+              <section className="dummy-card dummy-situation"><p className="detail-block-title">🎬 TYPICAL SITUATION</p><RichText text={record.typical_situation || '—'} /></section>
+              {record.common_mistakes && <section className="dummy-card dummy-dont md:col-span-2"><p className="detail-block-title">🚫 DON'T SAY THIS</p><RichText text={record.common_mistakes} /></section>}
+            </div>
+          </section>
         )}
 
         {!isTrick && detailTab === 'ai' && (

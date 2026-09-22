@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2, Zap, Languages, SlidersHorizontal } from 'lucide-react';
+import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2, Zap, Languages, SlidersHorizontal, Search, LibraryBig } from 'lucide-react';
 
 function speakWord(text, lang = 'en-US') {
   if (!text) return;
@@ -163,6 +163,18 @@ function fuzzyMatch(record, query) {
   return tokens.every((t) => fields.some((field) => textHasFuzzyToken(field, t)));
 }
 
+function trickEmoji(record) {
+  const text = `${record.trick_category || ''} ${record.word || ''}`.toLowerCase();
+  if (/preposition/.test(text)) return '📍';
+  if (/tense|past|present|future|time/.test(text)) return '⏱️';
+  if (/conditional|if clause/.test(text)) return '🔀';
+  if (/article|a an the/.test(text)) return '🧩';
+  if (/word order|order/.test(text)) return '🔤';
+  if (/pronunciation|sound/.test(text)) return '🗣️';
+  if (/modal/.test(text)) return '🎛️';
+  return '💡';
+}
+
 function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, showAttention, displayMode='cozy', onQuickReview }) {
   const [confirmDel, setConfirmDel] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
@@ -230,10 +242,12 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
         <div className="entry-example-block"><span className="entry-inline-label">Example</span><p>{record.example}</p></div>
       )}
       {isTrick && (
-        <div className="trick-preview">
-          {[['RULE', record.transitive], ['QUICK NOTES', record.how_common], ['EXAMPLES', record.synonyms]].filter(([, v]) => v).map(([label, val]) => (
-            <section key={label} className="trick-preview-section"><div className="trick-preview-label">{label}</div><p className="trick-preview-text">{val}</p></section>
-          ))}
+        <div className="trick-preview trick-preview-clean">
+          <div className="trick-preview-icon">{trickEmoji(record)}</div>
+          <div className="trick-preview-copy">
+            <span className="trick-preview-label">{record.trick_category || 'Grammar trick'}</span>
+            <p className="trick-preview-text">{record.quick_summary || record.rule || record.transitive || 'Open this trick to see the rule.'}</p>
+          </div>
         </div>
       )}
 
@@ -276,6 +290,9 @@ export default function LibraryView({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [savedSearches, setSavedSearches] = useState(() => { try { return JSON.parse(localStorage.getItem('ev-saved-searches') || '[]'); } catch { return []; } });
   const [saveName, setSaveName] = useState('');
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [categoryQuery, setCategoryQuery] = useState('');
   useEffect(()=>localStorage.setItem('ev-library-view',displayMode),[displayMode]);
   useEffect(()=>localStorage.setItem('ev-saved-searches',JSON.stringify(savedSearches)),[savedSearches]);
   useEffect(() => {
@@ -410,43 +427,46 @@ export default function LibraryView({
         <p className="mt-3" style={{ color: '#726773' }}>{isSearching || hasCross ? 'Showing matches across your whole vault.' : description}</p>
       </div>
 
-      <nav className="mobile-category-menu" aria-label="Library categories">
-        {mobileCats.map((c) => {
-          const Icon = c.icon;
-          const isActive = (['expression', 'collocation'].includes(c.id) && librarySpecificType && librarySpecificType.toLowerCase() === c.id) || currentView === c.id;
-          return (
-            <button
-              key={c.id}
-              type="button"
-              className={isActive ? 'active' : ''}
-              onClick={() => {
-                if (['expression', 'collocation'].includes(c.id)) {
-                  onOpenCategory(c.id[0].toUpperCase() + c.id.slice(1));
-                } else {
-                  onNavigate(c.id);
-                }
-              }}
-            >
-              <Icon size={14} />{c.label}
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="mobile-category-select-wrap">
-        <span className="mobile-category-select-label">Library section</span>
-        <select
-          className="mobile-category-select"
-          value={librarySpecificType ? librarySpecificType.toLowerCase() : currentView}
-          onChange={(e) => {
-            const value = e.target.value;
-            if (['expression', 'collocation'].includes(value)) onOpenCategory(value[0].toUpperCase() + value.slice(1));
-            else onNavigate(value);
-          }}
-        >
-          {mobileCats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-        </select>
+      <div className="mobile-library-rail" aria-label="Library quick tools">
+        <button type="button" onClick={() => setMobileSearchOpen((v) => !v)} aria-label="Search library" title="Search"><Search size={18} /></button>
+        <button type="button" onClick={() => setFiltersOpen((v) => !v)} aria-label="Filters" title="Filters"><span aria-hidden="true">🎛️</span></button>
+        <button type="button" onClick={() => setMobileDrawerOpen(true)} aria-label="Open library categories" title="Categories"><LibraryBig size={18} /></button>
       </div>
+
+      {mobileSearchOpen && (
+        <div className="mobile-library-search">
+          <Search size={16} />
+          <input autoFocus type="search" placeholder="Search your Vault…" value={search} onChange={(e) => onSearchChange?.(e.target.value)} />
+          <button type="button" onClick={() => setMobileSearchOpen(false)} aria-label="Close search"><X size={16} /></button>
+        </div>
+      )}
+
+      {mobileDrawerOpen && (
+        <div className="mobile-category-backdrop" onClick={() => setMobileDrawerOpen(false)}>
+          <aside className="mobile-category-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-drawer-head">
+              <div><p className="eyebrow m-0">Library</p><h3>Categories</h3></div>
+              <button type="button" className="soft-btn p-2" onClick={() => setMobileDrawerOpen(false)} aria-label="Close categories"><X size={17} /></button>
+            </div>
+            <div className="mobile-category-search"><Search size={15} /><input value={categoryQuery} onChange={(e) => setCategoryQuery(e.target.value)} placeholder="Find a category…" /></div>
+            <nav className="mobile-drawer-list">
+              {mobileCats.filter((c) => c.label.toLowerCase().includes(categoryQuery.trim().toLowerCase())).map((c) => {
+                const Icon = c.icon;
+                const isActive = (['expression', 'collocation'].includes(c.id) && librarySpecificType && librarySpecificType.toLowerCase() === c.id) || currentView === c.id;
+                return (
+                  <button key={c.id} type="button" className={isActive ? 'active' : ''} onClick={() => {
+                    setMobileDrawerOpen(false);
+                    if (['expression', 'collocation'].includes(c.id)) onOpenCategory(c.id[0].toUpperCase() + c.id.slice(1));
+                    else onNavigate(c.id);
+                  }}>
+                    <Icon size={17} /><span>{c.label}</span>{isActive && <strong>✓</strong>}
+                  </button>
+                );
+              })}
+            </nav>
+          </aside>
+        </div>
+      )}
 
       {/* Active filter chips */}
       {(tagFilter || topicFilter || (extraFilter && extraFilter.value)) && (
@@ -543,7 +563,7 @@ export default function LibraryView({
         <div className="library-tools mt-4"><div className="saved-searches"><input value={saveName} onChange={e=>setSaveName(e.target.value)} placeholder="Name this filter view"/><button className="soft-btn" type="button" onClick={saveCurrentSearch}>Save filters</button>{savedSearches.map((v,i)=><span key={v.name}><button type="button" className="saved-view-chip" onClick={()=>applySavedSearch(v)}>{v.name}</button><button className="saved-view-x" onClick={()=>setSavedSearches(x=>x.filter((_,j)=>j!==i))}>×</button></span>)}</div></div>
       </div>}
 
-      <div className={`grid ${displayMode==='compact'?'sm:grid-cols-2 xl:grid-cols-4':'sm:grid-cols-2 xl:grid-cols-3'} gap-4 ${currentView === 'tricks' ? 'tricks-layout' : ''}`}>
+      <div className={`grid library-entry-grid ${displayMode==='compact'?'sm:grid-cols-2 xl:grid-cols-4':'sm:grid-cols-2 xl:grid-cols-3'} gap-4 ${currentView === 'tricks' ? 'tricks-layout' : ''}`}>
         {filtered.length === 0 ? (
           <div className="empty-box sm:col-span-2 xl:col-span-3">No entries match this view yet. Add a new discovery to begin.</div>
         ) : filtered.map((r) => (

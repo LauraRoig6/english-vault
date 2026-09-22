@@ -8,7 +8,7 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
-export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue, onNeedsAttention, onSmartCollection, onOpenSavedView }) {
+export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAdd, onOpenDetail, onDiscoverSurprise, surpriseLoading, onStartDue, onNeedsAttention, onSmartCollection, onOpenSavedView, recentViewed = [] }) {
   const stats = useMemo(() => {
     const counts = { Vocabulary: 0, Verb: 0, Slang: 0, 'Phrasal Verb': 0, Expression: 0, Collocation: 0, Idiom: 0, 'Connector / Linker': 0, 'Grammar / Trick': 0 };
     records.forEach((r) => { if (counts[r.type] !== undefined) counts[r.type]++; });
@@ -121,6 +121,21 @@ export default function HomeView({ records, onNavigate, onOpenCategory, onOpenAd
       </section>
 
       {savedViews.length > 0 && <section className="mt-8"><div className="flex justify-between items-end mb-4"><div><p className="eyebrow">Made by you</p><h2 className="section-heading">Pinned collections</h2></div></div><div className="flex flex-wrap gap-2">{savedViews.map(v=><button key={v.name} className="soft-btn" type="button" onClick={()=>onOpenSavedView?.(v)}>📌 {v.name}</button>)}</div></section>}
+
+      {recentViewed.length > 0 && (
+        <section className="mt-8">
+          <div className="flex justify-between items-end mb-4">
+            <div><p className="eyebrow">Pick up where you left off</p><h2 className="section-heading">Recently viewed</h2></div>
+          </div>
+          <div className="recent-viewed-strip">
+            {recentViewed.slice(0,5).map((r) => (
+              <button key={r.__backendId} type="button" className="card recent-viewed-card" onClick={() => onOpenDetail(r)}>
+                <strong>{r.word}</strong><span>{r.type}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Bottom rows */}
       <div className="grid lg:grid-cols-3 gap-5 mt-8">
