@@ -38,14 +38,19 @@ function Chip({ kind, children }) {
   return <span className={`chip ${cls}`}>{children}</span>;
 }
 
+function renderInlineMarkdown(line) {
+  const parts = String(line ?? '').split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return parts.map((part, i) => part.startsWith('**') && part.endsWith('**')
+    ? <strong key={i}>{part.slice(2, -2)}</strong>
+    : part.startsWith('*') && part.endsWith('*')
+      ? <em key={i}>{part.slice(1, -1)}</em>
+      : <React.Fragment key={i}>{part}</React.Fragment>);
+}
+
 function RichText({ text }) {
   if (!text) return null;
-  const renderInline = (line) => {
-    const parts = String(line).split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
-    return parts.map((part, i) => part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2,-2)}</strong> : part.startsWith('*') && part.endsWith('*') ? <em key={i}>{part.slice(1,-1)}</em> : <React.Fragment key={i}>{part}</React.Fragment>);
-  };
   const lines = String(text).split(/\n+/).filter(Boolean);
-  return <div className="rich-text">{lines.map((line,i)=>/^[-•]\s/.test(line) ? <div key={i} className="rich-bullet">• {renderInline(line.replace(/^[-•]\s*/,''))}</div> : <p key={i}>{renderInline(line)}</p>)}</div>;
+  return <div className="rich-text">{lines.map((line,i)=>/^[-•]\s/.test(line) ? <div key={i} className="rich-bullet">• {renderInlineMarkdown(line.replace(/^[-•]\s*/,''))}</div> : <p key={i}>{renderInlineMarkdown(line)}</p>)}</div>;
 }
 
 function RelatedPills({ label, value, onRelatedClick, allRecords = [] }) {
@@ -91,13 +96,13 @@ function TrickScheme({ text, fallback }) {
   const source = String(text || fallback || '').trim();
   if (!source) return null;
   const parts = source.split(/\n|\s*[;•]\s*/).map(x => x.trim()).filter(Boolean).slice(0, 8);
-  return <section className="trick-scheme-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">VISUAL SCHEME</p><div className="trick-scheme-flow">{parts.map((x,i)=><React.Fragment key={i}><div className="trick-scheme-node">{x}</div>{i < parts.length - 1 && <div className="trick-scheme-arrow">→</div>}</React.Fragment>)}</div></section>;
+  return <section className="trick-scheme-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">VISUAL SCHEME</p><div className="trick-scheme-flow">{parts.map((x,i)=><React.Fragment key={i}><div className="trick-scheme-node">{renderInlineMarkdown(x)}</div>{i < parts.length - 1 && <div className="trick-scheme-arrow">→</div>}</React.Fragment>)}</div></section>;
 }
 
 function TrickExamples({ value }) {
   const items = String(value || '').split(/\n+|\s*[;•]\s*/).map(x=>x.trim()).filter(Boolean);
   if (!items.length) return null;
-  return <section className="trick-examples-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXAMPLES</p><div className="trick-example-grid">{items.slice(0,8).map((x,i)=><div key={i} className="trick-example-item"><span>{i+1}</span><p>{x}</p></div>)}</div></section>;
+  return <section className="trick-examples-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXAMPLES</p><div className="trick-example-grid">{items.slice(0,8).map((x,i)=><div key={i} className="trick-example-item"><span>{i+1}</span><p>{renderInlineMarkdown(x)}</p></div>)}</div></section>;
 }
 
 export default function DetailModal({ record, onClose, onEdit, onDelete, onToggleFav, onTagClick, onRelatedClick, onQuiz, allRecords = [], onStatusChange, onUpdate, onBackRecord }) {
@@ -254,15 +259,15 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
 
             {isTrick ? (
               <div className="trick-detail-layout mt-6">
-                {(record.quick_summary || record.trick_category || record.separable) && <section className="trick-summary-card"><div><p className="text-xs font-bold tracking-widest m-0 detail-block-title">QUICK TAKE</p><h3>{record.quick_summary || record.rule || record.transitive}</h3></div>{(record.trick_category || record.separable) && <span className="chip chip-type">{record.trick_category || record.separable}</span>}</section>}
-                {(record.rule || record.transitive) && <section className="trick-rule-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">THE RULE</p><p>{record.rule || record.transitive}</p></section>}
+                {(record.quick_summary || record.trick_category || record.separable) && <section className="trick-summary-card"><div><p className="text-xs font-bold tracking-widest m-0 detail-block-title">QUICK TAKE</p><h3>{renderInlineMarkdown(record.quick_summary || record.rule || record.transitive)}</h3></div>{(record.trick_category || record.separable) && <span className="chip chip-type">{record.trick_category || record.separable}</span>}</section>}
+                {(record.rule || record.transitive) && <section className="trick-rule-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">THE RULE</p><RichText text={record.rule || record.transitive} /></section>}
                 <TrickScheme text={record.visual_scheme} fallback={record.rule || record.transitive} />
                 {(record.explanation || record.how_common) && <section className="trick-explain-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXPLANATION</p><RichText text={record.explanation || record.how_common} /></section>}
                 {record.choni_explanation && <section className="trick-choni-card"><div className="trick-choni-title"><span>💅</span><div><p className="text-xs font-bold tracking-widest m-0 detail-block-title">MODO CHONI · PERO CORRECTO</p><small>Para que se te quede sin perder rigor.</small></div></div><RichText text={record.choni_explanation} /></section>}
                 <TrickExamples value={record.examples_list || record.synonyms} />
                 <div className="grid md:grid-cols-2 gap-4">
-                  {(record.exceptions || record.offensive_warning) && <section className="trick-warning-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXCEPTIONS</p><p>{record.exceptions || record.offensive_warning}</p></section>}
-                  {(record.memory_trick || record.related) && <section className="trick-memory-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">MEMORY TRICK</p><p>{record.memory_trick || record.related}</p></section>}
+                  {(record.exceptions || record.offensive_warning) && <section className="trick-warning-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">EXCEPTIONS</p><RichText text={record.exceptions || record.offensive_warning} /></section>}
+                  {(record.memory_trick || record.related) && <section className="trick-memory-card"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">MEMORY TRICK</p><RichText text={record.memory_trick || record.related} /></section>}
                   {(record.common_mistakes || record.notes) && <section className="trick-mistakes-card md:col-span-2"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">DON'T SAY THIS</p><RichText text={record.common_mistakes || record.notes} /></section>}
                   {record.notes && record.common_mistakes && <section className="trick-notes-card md:col-span-2"><p className="text-xs font-bold tracking-widest m-0 detail-block-title">NOTES</p><RichText text={record.notes} /></section>}
                 </div>
