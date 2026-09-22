@@ -1,0 +1,26 @@
+ENGLISH VAULT v10 · MOBILE LEARNING POLISH
+
+Cambios principales:
+- Quick Fill ahora conserva contenido multilínea y NOTES.
+- Autofill rellena NOTES cuando hay una nota útil y guarda los nuevos campos de estudio.
+- Nueva pestaña "English for dummies" para entradas léxicas:
+  · Explain it simply (en español)
+  · Explícamelo como mi amiga (en español)
+  · One-line memory hook
+  · Typical situation
+  · Don't say this
+- "Don't say this" sustituye visualmente a Common Mistakes y usa ❌ / ✅ cuando procede.
+- Copy template deja TYPE vacío y solo prerrellena WORD / EXPRESSION.
+- Autofill diferencia explícitamente Vocabulary, Verb, Slang, Phrasal Verb, Collocation, Idiom, Expression, Connector y Grammar/Trick.
+- Aviso de "Needs review" solo cuando la clasificación IA es realmente ambigua.
+- Vista general de Tricks simplificada: icono + categoría + quick summary.
+- Móvil Library: botón fijo lateral para categorías, lupa y filtro; drawer lateral buscable.
+- Móvil Library: 2 tarjetas por fila manteniendo el contenido principal visible.
+- Recently viewed en Home.
+- Navegación "Previous word" al encadenar entradas relacionadas.
+- Badge de completitud en detalle.
+- Naturalness score acepta formatos tipo 5/5 al guardar.
+- Service worker/cache actualizado a v10.
+
+NOTA DE VERIFICACIÓN:
+No se pudo ejecutar un build local completo en este entorno porque la instalación npm agotó el tiempo disponible. La revisión de código y estructura se ha hecho sobre la v9 actual. Si Vercel devuelve un error de build, usar el mensaje rojo final para corregirlo exactamente.

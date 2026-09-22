@@ -6,7 +6,7 @@ const schema = {
   required: [
     'type','word','meaning','spanish','pronunciation_easy','example','my_example','register','level','variety','topic','tags','synonyms','antonyms','related','word_class','word_family','typical_collocations','frequency','naturalness_score','naturalness_label','native_alternative','useful_for_exams','register_ladder','why_useful','collocation_mistake','semantic_field','pattern_structure','confused_with','mini_contrast','best_for','avoid_overusing','usage_warning',
     'separable','transitive','similar_expressions','how_common','offensive_warning','slang_tags','trick_category','quick_summary','rule','visual_scheme','explanation','choni_explanation',
-    'examples_list','exceptions','memory_trick','common_mistakes','notes'
+    'examples_list','exceptions','memory_trick','common_mistakes','notes','simple_explanation','friend_explanation','memory_hook','typical_situation','classification_confidence','classification_note'
   ],
   properties: {
     type: { type: 'string', enum: ALLOWED_TYPES },
@@ -20,7 +20,9 @@ const schema = {
     separable: { type: 'string' }, transitive: { type: 'string' }, similar_expressions: { type: 'string' }, how_common: { type: 'string' },
     offensive_warning: { type: 'string' }, slang_tags: { type: 'string' }, trick_category: { type: 'string' }, quick_summary: { type: 'string' }, rule: { type: 'string' }, visual_scheme: { type: 'string' },
     explanation: { type: 'string' }, choni_explanation: { type: 'string' }, examples_list: { type: 'string' }, exceptions: { type: 'string' }, memory_trick: { type: 'string' },
-    common_mistakes: { type: 'string' }, notes: { type: 'string' }
+    common_mistakes: { type: 'string' }, notes: { type: 'string' },
+    simple_explanation: { type: 'string' }, friend_explanation: { type: 'string' }, memory_hook: { type: 'string' }, typical_situation: { type: 'string' },
+    classification_confidence: { type: 'string', enum: ['High', 'Needs review'] }, classification_note: { type: 'string' }
   }
 };
 
@@ -45,7 +47,18 @@ SYNONYMS, ANTONYMS, RELATED EXPRESSIONS, WORD FAMILY, TYPICAL COLLOCATIONS, CONF
 
 
 
-CLASSIFICATION: Use Verb for ordinary lexical verbs such as "to blare", "to ponder" or "to dwindle". Keep Phrasal Verb for verb + particle combinations such as "put off". Use Vocabulary primarily for nouns, adjectives and adverbs; populate WORD CLASS for Vocabulary with Noun, Adjective, Adverb or Other. For Verb, keep word_class blank.
+CLASSIFICATION: Classify by linguistic function, not by how informal or memorable the item feels.
+- Vocabulary: primarily a single noun, adjective or adverb (and other standalone lexical items that do not fit a more specific category).
+- Verb: an ordinary lexical verb, e.g. "to blare", "to ponder", "to dwindle".
+- Phrasal Verb: a lexical verb + particle/preposition functioning as a unit, e.g. "put off", "carry on", "give up". Do NOT use Phrasal Verb for ordinary verb phrases or idioms merely because they contain a verb.
+- Collocation: a conventional word partnership whose words largely keep their normal meanings, e.g. "heavy rain", "make a decision", "deeply concerned". A collocation is about habitual co-occurrence, not figurative meaning.
+- Slang: distinctly very informal/non-standard or group/period-marked vocabulary, e.g. "skint", "knackered". Do NOT label something Slang merely because it is conversational.
+- Idiom: a fixed/semi-fixed expression whose overall meaning is not fully predictable from the literal words, e.g. "sit on the fence", "pull strings".
+- Expression: useful multi-word expression that is not better classified as Idiom, Collocation, Phrasal Verb or Connector.
+- Connector / Linker: organises discourse or logical relations between clauses/ideas.
+- Grammar / Trick: a rule, contrast, mnemonic or usage note rather than a lexical item.
+Use Vocabulary primarily for nouns, adjectives and adverbs; populate WORD CLASS for Vocabulary with Noun, Adjective, Adverb or Other. For Verb, keep word_class blank.
+Set classification_confidence to "High" when the category is clear. Set it to "Needs review" only when two categories are genuinely plausible, and explain the ambiguity briefly in classification_note. Never use "Needs review" just because the item is rare.
 
 FREQUENCY: choose one concise label: Very common, Common, Less common, or Rare.
 NATURALNESS SCORE: rate how idiomatic/natural the target sounds in normal modern English from 1 to 5, where 5 = very natural/idiomatic and 1 = awkward or normally avoided. This is NOT the same as formality. NATURALNESS LABEL should be one short useful explanation such as "Very natural in everyday speech", "Natural, but mainly in formal writing", or "Correct but rather literary".
@@ -56,7 +69,17 @@ WHY IS THIS USEFUL?: one concise learner-focused reason to remember the item.
 COMMON COLLOCATION MISTAKE: give one concise wrong→right collocation trap when useful; otherwise blank.
 SEMANTIC FIELD: one short thematic label such as confusion, agreement, anger, movement, academic writing.
 
-Populate usage_warning whenever register, grammar, connotation, countability, collocation or context could cause a learner mistake. COMMON MISTAKES MUST be non-empty for every non-Grammar/Trick entry: give 1-2 concise, specific learner mistakes or usage traps. For idioms, include a literal-translation/fixed-expression trap when relevant. For connectors, mention punctuation/position/register if useful. For vocabulary, mention a realistic collocation, meaning, register, countability, preposition or false-friend trap. Never invent an unrelated comparison merely to fill it. Never use em dashes as placeholders.
+Populate usage_warning whenever register, grammar, connotation, countability, collocation or context could cause a learner mistake.
+COMMON MISTAKES is displayed in the app as "DON'T SAY THIS". Make it visual and practical whenever possible using **❌** for the wrong/awkward form and **✅** for the natural/correct form. Give 1-2 concise traps. Do not duplicate COMMON COLLOCATION MISTAKE word-for-word.
+For idioms, include a literal-translation/fixed-expression trap when relevant. For connectors, mention punctuation/position/register if useful. For vocabulary, mention a realistic collocation, meaning, register, countability, preposition or false-friend trap. Never invent an unrelated comparison merely to fill it. Never use em dashes as placeholders.
+
+For EVERY non-Grammar/Trick lexical entry, populate these study fields automatically:
+- simple_explanation: in SPANISH, explain the target in very easy language ("English for dummies" level) while keeping the target English words in English. Use simple Markdown such as **bold** and *italics* when it genuinely helps.
+- friend_explanation: in SPANISH, explain it as a clever friend would: colloquial, warm, memorable and a bit playful, but accurate. English examples/target words stay in English. Markdown is allowed.
+- memory_hook: one ultra-short memorable line that makes the meaning stick. Spanish may be used, with the English target left in English.
+- typical_situation: one short, concrete situation in which a native speaker would naturally use the item.
+For Grammar / Trick, leave those four lexical study fields empty because Tricks already have their own choni explanation and memory trick.
+NOTES must contain one concise genuinely useful extra note when there is one (for example a fixed preposition, a useful nuance, a common variant or a usage shortcut). Do not silently drop NOTES. If there is no extra note beyond the other fields, return an empty string.
 
 For Grammar / Trick, fully populate trick_category, quick_summary, rule, visual_scheme, explanation, choni_explanation, examples_list, exceptions, memory_trick and common_mistakes. QUICK SUMMARY is one short takeaway. VISUAL SCHEME should be a compact text diagram using arrows (→), short lines or contrasts that the UI can render as visual steps. CHONI EXPLANATION must be in Spanish, funny and memorable in a playful colloquial tone, but pedagogically correct and never vulgar, insulting or misleading. Keep it concise. For Phrasal Verb, populate separable, transitive and similar_expressions. For Slang, populate how_common, usage_warning and slang_tags. Keep offensive_warning empty unless it is needed for backward compatibility. For Connector / Linker, make the function in discourse clear. Do not invent a MY EXAMPLE for the learner: my_example must be an empty string.`
 
@@ -120,10 +143,10 @@ For Grammar / Trick, fully populate trick_category, quick_summary, rule, visual_
     entry.confused_with = cleanLexicalList(entry.confused_with);
     entry.similar_expressions = cleanLexicalList(entry.similar_expressions);
     if (!String(entry.common_mistakes || '').trim()) {
-      if (entry.type === 'Idiom') entry.common_mistakes = 'Do not translate or interpret it literally; use it as a fixed idiomatic expression.';
-      else if (entry.type === 'Connector / Linker') entry.common_mistakes = 'Check its sentence position, punctuation and register instead of using it as a direct replacement for every contrast linker.';
-      else if (entry.type === 'Phrasal Verb') entry.common_mistakes = 'Check whether it is separable and whether it needs an object before changing the word order.';
-      else if (entry.type !== 'Grammar / Trick') entry.common_mistakes = 'Avoid using it only from a literal Spanish translation; check the usual context, collocations and register.';
+      if (entry.type === 'Idiom') entry.common_mistakes = '❌ Literal translation or flexible wording.\n✅ Use it as a fixed idiomatic expression.';
+      else if (entry.type === 'Connector / Linker') entry.common_mistakes = '❌ Using it as an interchangeable replacement for every linker.\n✅ Check its normal position, punctuation and register.';
+      else if (entry.type === 'Phrasal Verb') entry.common_mistakes = '❌ Changing the word order without checking the pattern.\n✅ Check whether it is separable and whether it needs an object.';
+      else if (entry.type !== 'Grammar / Trick') entry.common_mistakes = '❌ Choosing it only from a literal Spanish translation.\n✅ Check the usual context, collocations and register.';
     }
     return res.status(200).json(entry);
   } catch (err) {
