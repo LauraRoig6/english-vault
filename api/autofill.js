@@ -76,8 +76,8 @@ For idioms, include a literal-translation/fixed-expression trap when relevant. F
 For EVERY non-Grammar/Trick lexical entry, populate these study fields automatically:
 - simple_explanation: in SPANISH, explain the target in very easy language ("English for dummies" level) while keeping the target English words in English. Use simple Markdown such as **bold** and *italics* when it genuinely helps.
 - friend_explanation: in SPANISH, explain it as a clever friend would: colloquial, warm, memorable and a bit playful, but accurate. English examples/target words stay in English. Markdown is allowed.
-- memory_hook: one ultra-short memorable line that makes the meaning stick. Spanish may be used, with the English target left in English.
-- typical_situation: one short, concrete situation in which a native speaker would naturally use the item.
+- memory_hook: in SPANISH, one ultra-short memorable line that makes the meaning stick. Keep the English target/key expression in English.
+- typical_situation: in SPANISH, one short, concrete situation explaining when a native speaker would naturally use the item. Keep any English example or key phrase in English.
 For Grammar / Trick, leave those four lexical study fields empty because Tricks already have their own choni explanation and memory trick.
 NOTES must contain one concise genuinely useful extra note when there is one (for example a fixed preposition, a useful nuance, a common variant or a usage shortcut). Do not silently drop NOTES. If there is no extra note beyond the other fields, return an empty string.
 

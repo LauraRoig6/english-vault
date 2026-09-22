@@ -322,11 +322,10 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
               <div><p className="eyebrow m-0">English for dummies</p><h3>Sin tecnicismos innecesarios</h3><small>Explicado en español; las palabras y ejemplos que tienen que ir en inglés se quedan en inglés.</small></div>
             </div>
             <div className="dummy-study-grid mt-4">
-              <section className="dummy-card dummy-simple"><p className="detail-block-title">💡 EXPLAIN IT SIMPLY</p><RichText text={record.simple_explanation || 'Todavía no hay explicación sencilla. Edita la ficha o vuelve a pasar Autofill.'} /></section>
+              <section className="dummy-card dummy-simple"><p className="detail-block-title">💡 EXPLICACIÓN SENCILLA</p><RichText text={record.simple_explanation || 'Todavía no hay explicación sencilla. Edita la ficha o vuelve a pasar Autofill.'} /></section>
               <section className="dummy-card dummy-friend"><p className="detail-block-title">💅 EXPLÍCAMELO COMO MI AMIGA</p><RichText text={record.friend_explanation || 'Todavía no hay explicación en modo amiga.'} /></section>
-              <section className="dummy-card dummy-hook"><p className="detail-block-title">🪝 ONE-LINE MEMORY HOOK</p><RichText text={record.memory_hook || '—'} /></section>
-              <section className="dummy-card dummy-situation"><p className="detail-block-title">🎬 TYPICAL SITUATION</p><RichText text={record.typical_situation || '—'} /></section>
-              {record.common_mistakes && <section className="dummy-card dummy-dont md:col-span-2"><p className="detail-block-title">🚫 DON'T SAY THIS</p><RichText text={record.common_mistakes} /></section>}
+              <section className="dummy-card dummy-hook"><p className="detail-block-title">🪝 GANCHO DE MEMORIA</p><RichText text={record.memory_hook || '—'} /></section>
+              <section className="dummy-card dummy-situation"><p className="detail-block-title">🎬 SITUACIÓN TÍPICA</p><RichText text={record.typical_situation || '—'} /></section>
             </div>
           </section>
         )}

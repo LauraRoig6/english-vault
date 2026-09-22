@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2, Zap, Languages, SlidersHorizontal, Search, LibraryBig } from 'lucide-react';
+import { BookMarked, MessageCircle, Link2, Quote, Puzzle, Lightbulb, GitBranch, Brain, Heart, Volume2, X, Trash2, Zap, Languages, SlidersHorizontal, Search, Menu } from 'lucide-react';
 
 function speakWord(text, lang = 'en-US') {
   if (!text) return;
@@ -26,6 +26,8 @@ const typeMap = {
   connectors: 'Connector / Linker',
   tricks: 'Grammar / Trick',
 };
+
+const libraryFilterTypes = ['Vocabulary', 'Verb', 'Slang', 'Phrasal Verb', 'Expression', 'Collocation', 'Idiom', 'Connector / Linker', 'Grammar / Trick'];
 
 const headings = {
   verbs: ['Verbs', 'Ordinary lexical verbs, separate from phrasal verbs.'],
@@ -291,8 +293,7 @@ export default function LibraryView({
   const [savedSearches, setSavedSearches] = useState(() => { try { return JSON.parse(localStorage.getItem('ev-saved-searches') || '[]'); } catch { return []; } });
   const [saveName, setSaveName] = useState('');
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [categoryQuery, setCategoryQuery] = useState('');
+  const [mobileDrawerFiltersOpen, setMobileDrawerFiltersOpen] = useState(false);
   useEffect(()=>localStorage.setItem('ev-library-view',displayMode),[displayMode]);
   useEffect(()=>localStorage.setItem('ev-saved-searches',JSON.stringify(savedSearches)),[savedSearches]);
   useEffect(() => {
@@ -427,19 +428,9 @@ export default function LibraryView({
         <p className="mt-3" style={{ color: '#726773' }}>{isSearching || hasCross ? 'Showing matches across your whole vault.' : description}</p>
       </div>
 
-      <div className="mobile-library-rail" aria-label="Library quick tools">
-        <button type="button" onClick={() => setMobileSearchOpen((v) => !v)} aria-label="Search library" title="Search"><Search size={18} /></button>
-        <button type="button" onClick={() => setFiltersOpen((v) => !v)} aria-label="Filters" title="Filters"><span aria-hidden="true">🎛️</span></button>
-        <button type="button" onClick={() => setMobileDrawerOpen(true)} aria-label="Open library categories" title="Categories"><LibraryBig size={18} /></button>
+      <div className="mobile-library-rail" aria-label="Open Library categories">
+        <button type="button" onClick={() => setMobileDrawerOpen(true)} aria-label="Open Library menu" title="Library menu"><Menu size={21} /></button>
       </div>
-
-      {mobileSearchOpen && (
-        <div className="mobile-library-search">
-          <Search size={16} />
-          <input autoFocus type="search" placeholder="Search your Vault…" value={search} onChange={(e) => onSearchChange?.(e.target.value)} />
-          <button type="button" onClick={() => setMobileSearchOpen(false)} aria-label="Close search"><X size={16} /></button>
-        </div>
-      )}
 
       {mobileDrawerOpen && (
         <div className="mobile-category-backdrop" onClick={() => setMobileDrawerOpen(false)}>
@@ -448,9 +439,24 @@ export default function LibraryView({
               <div><p className="eyebrow m-0">Library</p><h3>Categories</h3></div>
               <button type="button" className="soft-btn p-2" onClick={() => setMobileDrawerOpen(false)} aria-label="Close categories"><X size={17} /></button>
             </div>
-            <div className="mobile-category-search"><Search size={15} /><input value={categoryQuery} onChange={(e) => setCategoryQuery(e.target.value)} placeholder="Find a category…" /></div>
+
+            <div className="mobile-drawer-tools">
+              <div className="mobile-drawer-search"><Search size={16} /><input type="search" placeholder="Search your Vault…" value={search} onChange={(e) => onSearchChange?.(e.target.value)} /></div>
+              <button type="button" className={`mobile-drawer-filter-btn ${mobileDrawerFiltersOpen ? 'active' : ''}`} onClick={() => setMobileDrawerFiltersOpen((v) => !v)} aria-label="Filters" title="Filters"><SlidersHorizontal size={18} /></button>
+            </div>
+
+            {mobileDrawerFiltersOpen && (
+              <div className="mobile-drawer-filters">
+                <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}><option value="">All types</option>{libraryFilterTypes.map((v) => <option key={v}>{v}</option>)}</select>
+                <select value={filters.level} onChange={(e) => setFilters({ ...filters, level: e.target.value })}><option value="">All levels</option>{['A1','A2','B1','B2','C1','C2','Native-like'].map((v) => <option key={v}>{v}</option>)}</select>
+                <select value={filters.register} onChange={(e) => setFilters({ ...filters, register: e.target.value })}><option value="">All registers</option>{['Formal','Neutral','Informal','Slang'].map((v) => <option key={v}>{v}</option>)}</select>
+                <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option value="">All statuses</option>{['New','Learning','Almost learnt','Mastered'].map((v) => <option key={v}>{v}</option>)}</select>
+                <button type="button" className="soft-btn" onClick={clearFilters}>Clear filters</button>
+              </div>
+            )}
+
             <nav className="mobile-drawer-list">
-              {mobileCats.filter((c) => c.label.toLowerCase().includes(categoryQuery.trim().toLowerCase())).map((c) => {
+              {mobileCats.map((c) => {
                 const Icon = c.icon;
                 const isActive = (['expression', 'collocation'].includes(c.id) && librarySpecificType && librarySpecificType.toLowerCase() === c.id) || currentView === c.id;
                 return (

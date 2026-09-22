@@ -1,0 +1,8 @@
+ENGLISH VAULT v10.1 · DRAWER + DUMMIES FIX
+
+- One fixed hamburger button in mobile Library.
+- Search + filters moved inside the category drawer.
+- Drawer stays attached to viewport while scrolling on mobile.
+- DON’T SAY THIS removed from English for dummies; remains in General.
+- English for dummies content enforced in Spanish in Autofill and Copy Template instructions.
+- Spanish-facing labels for the dummies study cards.

@@ -30,12 +30,12 @@ function copyTemplate(word = '', type = 'Vocabulary') {
   if (type === 'Phrasal Verb') common.splice(-3, 0, ['PHRASAL: SEPARABLE?', ''], ['PHRASAL: TRANSITIVITY', ''], ['RELATED PHRASAL VERBS', '']);
   if (type === 'Slang') common.splice(-3, 0, ['SLANG: HOW COMMON?', ''], ['SLANG TAGS', '']);
   if (type === 'Grammar / Trick') {
-    return `NEW DISCOVERY\n\n${[
+    return `NEW DISCOVERY\n\nINSTRUCTIONS FOR CHATGPT: En SIMPLE EXPLANATION (SPANISH), EXPLAIN IT LIKE MY FRIEND, ONE-LINE MEMORY HOOK y TYPICAL SITUATION, escribe la explicación en español. Mantén en inglés solo la palabra/expresión objetivo, ejemplos, collocations y otras palabras clave inglesas necesarias.\n\n${[
       ['TYPE', ''], ['WORD / EXPRESSION', String(word || '').trim().toLowerCase()], ['MEANING IN ENGLISH', ''], ['SPANISH', ''], ['NATURAL EXAMPLE', ''], ['MY EXAMPLE', ''],
       ['REGISTER', ''], ['LEVEL', ''], ['VARIETY', ''], ['TOPIC', ''], ['TAGS', ''], ['TRICK CATEGORY', ''], ['QUICK SUMMARY', ''], ['RULE', ''], ['VISUAL SCHEME', ''], ['EXPLANATION', ''], ['CHONI EXPLANATION', ''], ['EXAMPLES', ''], ['EXCEPTIONS', ''], ['MEMORY TRICK', ''], ['DON\'T SAY THIS', ''], ['NOTES', ''],
     ].map(([k,v]) => `${k}: ${v}`).join('\n')}`;
   }
-  return `NEW DISCOVERY\n\n${common.map(([k,v]) => `${k}: ${v}`).join('\n')}`;
+  return `NEW DISCOVERY\n\nINSTRUCTIONS FOR CHATGPT: En SIMPLE EXPLANATION (SPANISH), EXPLAIN IT LIKE MY FRIEND, ONE-LINE MEMORY HOOK y TYPICAL SITUATION, escribe la explicación en español. Mantén en inglés solo la palabra/expresión objetivo, ejemplos, collocations y otras palabras clave inglesas necesarias.\n\n${common.map(([k,v]) => `${k}: ${v}`).join('\n')}`;
 }
 
 export default function EntryModal({ onClose, onSave, editingRecord, prefillRecord, existingRecords }) {
@@ -458,9 +458,9 @@ export default function EntryModal({ onClose, onSave, editingRecord, prefillReco
             </>}
             {!isTrick && <>
               <div className="field md:col-span-2"><label>SIMPLE EXPLANATION · SPANISH</label><textarea value={form.simple_explanation} onChange={(e) => set('simple_explanation', e.target.value)} placeholder="Explicación muy sencilla en español; puede usar **negrita** y *cursiva*." /></div>
-              <div className="field md:col-span-2"><label>EXPLAIN IT LIKE MY FRIEND</label><textarea value={form.friend_explanation} onChange={(e) => set('friend_explanation', e.target.value)} placeholder="Explícamelo como una amiga: cercano, memorable y correcto." /></div>
-              <div className="field"><label>ONE-LINE MEMORY HOOK</label><input value={form.memory_hook} onChange={(e) => set('memory_hook', e.target.value)} /></div>
-              <div className="field"><label>TYPICAL SITUATION</label><input value={form.typical_situation} onChange={(e) => set('typical_situation', e.target.value)} /></div>
+              <div className="field md:col-span-2"><label>EXPLÍCAMELO COMO MI AMIGA · SPANISH</label><textarea value={form.friend_explanation} onChange={(e) => set('friend_explanation', e.target.value)} placeholder="Explícamelo como una amiga: cercano, memorable y correcto." /></div>
+              <div className="field"><label>GANCHO DE MEMORIA · SPANISH</label><input value={form.memory_hook} onChange={(e) => set('memory_hook', e.target.value)} /></div>
+              <div className="field"><label>SITUACIÓN TÍPICA · SPANISH</label><input value={form.typical_situation} onChange={(e) => set('typical_situation', e.target.value)} /></div>
               <div className="field md:col-span-2"><label>DON'T SAY THIS</label><textarea value={form.common_mistakes} onChange={(e) => set('common_mistakes', e.target.value)} placeholder="❌ common mistake → ✅ natural/correct version" /></div>
               <div className="field md:col-span-2"><label>NOTES</label><textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
               {form.classification_confidence === 'Needs review' && <div className="md:col-span-2" style={{padding:'10px 12px',borderRadius:12,background:'#fff7df',border:'1px solid #ead59a',color:'#846821',fontSize:'.82rem'}}><strong>AI type check:</strong> {form.classification_note || 'The category is uncertain. Please review TYPE before saving.'}</div>}
