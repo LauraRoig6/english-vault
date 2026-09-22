@@ -239,16 +239,16 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
           <>
             {!isTrick && (record.meaning || record.spanish || record.example) && (
               <div className="grid md:grid-cols-3 gap-4 mt-5">
-                {record.meaning && <section className="rounded-2xl p-4" style={{ background: '#fff0f6', border: '1px solid #f0cad9' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#a05c78' }}>💡 MEANING</p><p className="leading-relaxed mt-2 mb-0">{record.meaning}</p></section>}
-                {record.spanish && <section className="rounded-2xl p-4" style={{ background: '#f2efff', border: '1px solid #dcd4f4' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#6d5d91' }}>🇪🇸 SPANISH</p><p className="leading-relaxed mt-2 mb-0">{record.spanish}</p></section>}
-                {record.example && <section className="rounded-2xl p-4" style={{ background: '#fff8dd', border: '1px solid #ecdda7' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#8a7027' }}>✨ NATURAL EXAMPLE</p><p className="leading-relaxed mt-2 mb-0" style={{ fontStyle: 'italic' }}>{record.example}</p></section>}
+                {record.meaning && <section className="rounded-2xl p-4" style={{ background: '#fff0f6', border: '1px solid #f0cad9' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#a05c78' }}>💡 MEANING</p><RichText text={record.meaning} /></section>}
+                {record.spanish && <section className="rounded-2xl p-4" style={{ background: '#f2efff', border: '1px solid #dcd4f4' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#6d5d91' }}>🇪🇸 SPANISH</p><RichText text={record.spanish} /></section>}
+                {record.example && <section className="rounded-2xl p-4 general-rich-example" style={{ background: '#fff8dd', border: '1px solid #ecdda7' }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#8a7027' }}>✨ NATURAL EXAMPLE</p><RichText text={record.example} /></section>}
               </div>
             )}
 
             {record.my_example && !isTrick && (
               <section className="mt-5 rounded-2xl p-4" style={{ background: '#eeeafb', border: '1px solid #d9d0ef' }}>
                 <p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#665784' }}>MY EXAMPLE ✦</p>
-                <p className="leading-relaxed mt-2 mb-0" style={{ fontWeight: 600 }}>{record.my_example}</p>
+                <div className="general-my-example"><RichText text={record.my_example} /></div>
               </section>
             )}
 
@@ -275,7 +275,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
                     ['#fffaf0','#eadcaf','#806a30'], ['#f2faf5','#d4e8da','#52705c'],
                   ];
                   const [bg,border,labelColor] = tones[index % tones.length];
-                  return <section key={label} className="rounded-2xl p-4" style={{ background: bg, border: `1px solid ${border}` }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: labelColor }}>{label.toUpperCase()}</p><p className="leading-relaxed mt-2 whitespace-pre-line m-0">{value}</p></section>;
+                  return <section key={label} className="rounded-2xl p-4 general-rich-card" style={{ background: bg, border: `1px solid ${border}` }}><p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: labelColor }}>{label.toUpperCase()}</p>{label === 'Register ladder' && <p className="register-ladder-legend">Informal → Neutral/Formal → Official/Technical</p>}<RichText text={value} /></section>;
                 })}
               </div>
             )}
@@ -283,7 +283,7 @@ export default function DetailModal({ record, onClose, onEdit, onDelete, onToggl
             {usageWarning && (
               <section className="mt-6 rounded-2xl p-4" style={{ background: '#fff7df', border: '1px solid #ead59a' }}>
                 <p className="text-xs font-bold tracking-widest m-0 detail-block-title" style={{ color: '#846821' }}><AlertTriangle size={14} style={{ display: 'inline', marginRight: 6 }} />USAGE WARNING</p>
-                <p className="leading-relaxed mt-2 mb-0">{usageWarning}</p>
+                <RichText text={usageWarning} />
               </section>
             )}
 
