@@ -165,6 +165,16 @@ function fuzzyMatch(record, query) {
   return tokens.every((t) => fields.some((field) => textHasFuzzyToken(field, t)));
 }
 
+
+function renderInlineMarkdown(line) {
+  const parts = String(line ?? '').split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return parts.map((part, i) => part.startsWith('**') && part.endsWith('**')
+    ? <strong key={i}>{part.slice(2, -2)}</strong>
+    : part.startsWith('*') && part.endsWith('*')
+      ? <em key={i}>{part.slice(1, -1)}</em>
+      : <React.Fragment key={i}>{part}</React.Fragment>);
+}
+
 function trickEmoji(record) {
   const text = `${record.trick_category || ''} ${record.word || ''}`.toLowerCase();
   if (/preposition/.test(text)) return '📍';
@@ -232,23 +242,23 @@ function EntryCard({ record, onOpen, onToggleFav, onDelete, query, onTagClick, s
       </div>
 
       {record.pronunciation_easy && <div className="entry-pronunciation">🗣 {record.pronunciation_easy}</div>}
-      {record.spanish && <div className="entry-spanish"><Languages size={14} aria-hidden="true" /> <strong>{record.spanish}</strong></div>}
+      {record.spanish && <div className="entry-spanish"><Languages size={14} aria-hidden="true" /> <strong>{renderInlineMarkdown(record.spanish)}</strong></div>}
 
       {!isTrick && (
         <div className="entry-definition-block">
           <span className="entry-inline-label">Meaning</span>
-          <p className="entry-meaning text-sm leading-relaxed m-0"><Highlight text={record.meaning || record.explanation || 'No meaning added yet.'} query={query} /></p>
+          <p className="entry-meaning text-sm leading-relaxed m-0">{renderInlineMarkdown(record.meaning || record.explanation || 'No meaning added yet.')}</p>
         </div>
       )}
       {!isTrick && record.example && (
-        <div className="entry-example-block"><span className="entry-inline-label">Example</span><p>{record.example}</p></div>
+        <div className="entry-example-block"><span className="entry-inline-label">Example</span><p>{renderInlineMarkdown(record.example)}</p></div>
       )}
       {isTrick && (
         <div className="trick-preview trick-preview-clean">
           <div className="trick-preview-icon">{trickEmoji(record)}</div>
           <div className="trick-preview-copy">
             <span className="trick-preview-label">{record.trick_category || 'Grammar trick'}</span>
-            <p className="trick-preview-text">{record.quick_summary || record.rule || record.transitive || 'Open this trick to see the rule.'}</p>
+            <p className="trick-preview-text">{renderInlineMarkdown(record.quick_summary || record.rule || record.transitive || 'Open this trick to see the rule.')}</p>
           </div>
         </div>
       )}

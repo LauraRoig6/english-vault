@@ -41,7 +41,7 @@ export default function Sidebar({ currentView, onNavigate }) {
           );
         })}
       </nav>
-      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v10.3 · trick rich text</p>
+      <p style={{ margin: '18px 10px 0', fontSize: '0.68rem', color: '#b095a2', fontWeight: 700 }}>v10.4 · library rich text</p>
     </aside>
   );
 }
